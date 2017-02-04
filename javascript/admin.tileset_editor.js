@@ -214,17 +214,16 @@ function save_tileset()
 		return false;
 	}
 
-	var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Style-Type" content="text/css" /><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
+	var html = '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
 	html += '<input type="hidden" name="mode" value="save_tileset" />';
 	html += '<input type="hidden" name="tileset_id" value="' + tileset_id + '" />';
-	html += '<input type="hidden" name="tileset_name" value="' + urlencode(tileset_name) + '" />';
+	html += '<input type="hidden" name="tileset_name" value="' + tileset_name + '" />';
 	html += '<input type="hidden" name="lower_img" value="' + lower_tiles_img.join() + '" />';
 	html += '<input type="hidden" name="lower_value" value="' + lower_tiles_value.join() + '" />';
 	html += '<input type="hidden" name="upper_img" value="' + upper_tiles_img.join() + '" />';
 	html += '<input type="hidden" name="upper_value" value="' + upper_tiles_value.join() + '" />';
 	html += '</form></body></html>';
 	var popupsaving = window.open('', '_blank', 'toolbar=0, location=0, directories=0, menuBar=0, scrollbars=0, resizable=0, width=10, height=10');
-	popupsaving.document.open();
 	popupsaving.document.write(html);
 	popupsaving.document.close();
 }
@@ -234,7 +233,7 @@ function resize_tileset()
 	var lower_size = parseInt(document.getElementById('set_lower_size').value);
 	var upper_size = parseInt(document.getElementById('set_upper_size').value);
 
-	if ( !lower_size || isNaN(lower_size) )
+    if ( !lower_size || isNaN(lower_size) )
 	{
 		lower_size = tileset_tiles_lower;
 		document.getElementById('set_lower_size').value = tileset_tiles_lower;
@@ -276,7 +275,8 @@ function resize_tileset()
 		i++;
 	}
 
-	i = 0;
+
+    i = 0;
 	while ( i < upper_size )
 	{
 		if ( typeof(upper_tiles_value[i]) != 'undefined' )
@@ -296,6 +296,7 @@ function resize_tileset()
 	construct_tileset(lower_img, lower_value, upper_img, upper_value);
 }
 
+//重置瓦片集大小，最后一行不满会自动补满一行
 function construct_tileset(lower_img, lower_value, upper_img, upper_value)
 {
 	lower_tiles_img = lower_img;
@@ -328,7 +329,7 @@ function construct_tileset(lower_img, lower_value, upper_img, upper_value)
 		count++;
 	}
 
-	background = ';background-color:' + tileset_color;
+    background = ';background-color:' + tileset_color;
 
 	while ( ((count) / tileset_cols) != Math.floor((count) / tileset_cols) )
 	{
@@ -380,7 +381,6 @@ function construct_tileset(lower_img, lower_value, upper_img, upper_value)
 	document.getElementById('lower_tileset').innerHTML = lower_tileset;
 	document.getElementById('upper_tileset').innerHTML = upper_tileset;
 	//document.body.innerHTML = str_replace(str_replace(str_replace(lower_tileset, '&', '&amp;'), '<', '&lt;'), '>', '&gt;');
-
 	saved = true;
 	loaded = true;
 	return true;

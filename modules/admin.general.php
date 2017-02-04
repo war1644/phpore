@@ -343,17 +343,17 @@ elseif ( $mode == 'GET.class_curve' && isset($_GET['function']) ) // modifier un
 	if ( $type == 'hp' || $type == 'attack' || $type == 'defense' )
 	{
 		$color = imagecolorallocate($picture, 255, 0, 0);
-		imagestring($picture, 5, 25, 25, $lang->$type, $color);
+		imagestring($picture, 5, 25, 25, $type, $color);
 	}
 	else if ( $type == 'exp' )
 	{
 		$color = imagecolorallocate($picture, 0, 180, 0);
-		imagestring($picture, 5, 25, 25, $lang->$type, $color);
+		imagestring($picture, 5, 25, 25, $type, $color);
 	}
 	else if ( $type == 'mp' || $type == 'mind' || $type == 'agility' )
 	{
 		$color = imagecolorallocate($picture, 0, 0, 255);
-		imagestring($picture, 5, 25, 25, $lang->$type, $color);
+		imagestring($picture, 5, 25, 25, $type, $color);
 	}
 	else
 	{
@@ -639,7 +639,7 @@ elseif ( $mode == 'GET.user_editor' ) // modifier un personnage
 		exit;
 	}
 
-	$character = new user('u.id = ' . intval($_GET['user_id']));
+	$character = new User('u.id = ' . intval($_GET['user_id']));
 
 	if ( $character->guest )
 	{
@@ -747,7 +747,7 @@ elseif ( $mode == 'POST.save_user' ) // sauver personnage
 		exit;
 	}
 
-	$character = new user('u.id = ' . intval($_POST['id']));
+	$character = new User('u.id = ' . intval($_POST['id']));
 
 	if ( $character->guest )
 	{

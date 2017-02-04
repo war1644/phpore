@@ -21,7 +21,7 @@
    </tr>
 
    <tr>
-    <td align="center" colspan="2"><input type="submit" value="Valider" class="post" /></td>
+    <td align="center" colspan="2"><input type="submit" value="登录" class="post" /></td>
    </tr>
   </table>
 
@@ -42,7 +42,7 @@
   <td class="row1" align="center">
 
   <br />{L_CHARACTER_NAME} : <b>{USER_NAME}</b><br /><br />
-  <div style="width:{CHAR_WIDTH}px;height:{CHAR_HEIGHT}px;background-image:url(images/charasets/{CHARASET})"></div><br /><br />
+  <div style="width:{CHAR_WIDTH}px;height:{CHAR_HEIGHT}px;background-image:url('images/charasets/{CHARASET}')"></div><br /><br />
   <a href="{U_INDEX}?mod=map">{L_GO_TO_MAP}</a><br /><br />
   <span class="gensmall"><a href="{U_INDEX}?mod=profile&mode=logout">{L_LOGOUT}</a></span><br /><br />
 

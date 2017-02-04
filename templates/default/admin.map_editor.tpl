@@ -37,7 +37,6 @@
  </tr>
 </table>
 <script type="text/javascript">
-<!--
 
 var tile_size = {TILE_SIZE};
 var u_index = '[U_INDEX]';
@@ -101,6 +100,5 @@ function preload_editor()
 	return true;
 }
 
-//-->
 </script>
 <script type="text/javascript" src="javascript/admin.map_editor.js"></script>

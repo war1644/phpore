@@ -252,7 +252,8 @@ function l_bloc(id, left, top, background_image, z_index, value)
 {
 	if ( background_image != '' )
 	{
-		background_image = 'background-image:url(images/tiles/' + background_image + ');';
+        var img = '\'images/tiles/' + background_image + '\'';
+		background_image = 'background-image:url('+img+');';
 	}
 
 	lower_map[top*col_map+left] = value;
@@ -268,7 +269,9 @@ function u_bloc(id, left, top, background_image, z_index, value)
 {
 	if ( background_image != '' )
 	{
-		background_image = 'background-image:url(images/tiles/' + background_image + ');';
+        var img = '\'images/tiles/' + background_image + '\'';
+        background_image = 'background-image:url('+img+');';
+		// background_image = 'background-image:url(images/tiles/' + background_image + ');';
 	}
 
 	upper_map[top*col_map+left] = value;
@@ -317,7 +320,7 @@ function bloc_click(left, top)
 	else if ( actual_mode == 3 )
 	{
 		var do_it = false;
-		var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Style-Type" content="text/css" /><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
+		var html = '<!doctype html><html lang="en"><head><meta charset="UTF-8"><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
 		html += '<input type="hidden" name="map_id" value="' + map_id + '" />';
 		html += '<input type="hidden" name="map_left" value="' + left + '" />';
 		html += '<input type="hidden" name="map_top" value="' + top + '" />';
@@ -329,7 +332,7 @@ function bloc_click(left, top)
 				html += '<input type="hidden" name="mode" value="preset_event" />';
 				html += '<input type="hidden" name="event_type" value="teleport" />';
 				html += '<input type="hidden" name="map_dir" value="' + document.getElementById('tool_type').value + '" />';
-				html += '<input type="hidden" name="map_name" value="' + urlencode(map_name) + '" />';
+				html += '<input type="hidden" name="map_name" value="' + map_name + '" />';
 				do_it = true;
 			}
 		}
@@ -355,8 +358,7 @@ function bloc_click(left, top)
 		if ( do_it )
 		{
 			html += '</form></body></html>';
-			var popupsaving = window.open('', '_blank', 'toolbar=0, location=0, directories=0, menuBar=0, scrollbars=0, resizable=0, width=10, height=10');
-			popupsaving.document.open();
+            var popupsaving = window.open('', '_blank', 'toolbar=0, location=0, directories=0, menuBar=0, scrollbars=0, resizable=0, width=100, height=100');
 			popupsaving.document.write(html);
 			popupsaving.document.close();
 		}
@@ -468,7 +470,8 @@ function bloc_action(bloc_id, relative_tile, relative_tile_id, relative_layer)
 	else
 	{
 		upper_map[top*col_map+left] = relative_tile_id;
-		document.getElementById('u' + bloc_id.substring(1, bloc_id.length)).style.backgroundImage = document.getElementById(relative_tile).style.backgroundImage;
+        console.log(bloc_id);
+        document.getElementById('u' + bloc_id.substring(1, bloc_id.length)).style.backgroundImage = document.getElementById(relative_tile).style.backgroundImage;
 	}
 }
 
@@ -499,20 +502,19 @@ function save_map()
 		return false;
 	}
 
-	var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Style-Type" content="text/css" /><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
+	var html = '<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"><title></title></head><body onload="document.getElementById(\'save_form\').submit();"><form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
 	html += '<input type="hidden" name="mode" value="save_map" />';
 	html += '<input type="hidden" name="map_id" value="' + map_id + '" />';
 	html += '<input type="hidden" name="col_map" value="' + col_map + '" />';
 	html += '<input type="hidden" name="tileset_id" value="' + tileset_id + '" />';
 	html += '<input type="hidden" name="old_tileset_id" value="' + old_tileset_id + '" />';
-	html += '<input type="hidden" name="map_name" value="' + urlencode(map_name) + '" />';
-	html += '<input type="hidden" name="map_music" value="' + urlencode(map_music) + '" />';
+	html += '<input type="hidden" name="map_name" value="' + map_name + '" />';
+	html += '<input type="hidden" name="map_music" value="' + map_music + '" />';
 	html += '<input type="hidden" name="lower_map" value="' + lower_map.join() + '" />';
 	html += '<input type="hidden" name="upper_map" value="' + upper_map.join() + '" />';
 	html += '<input type="hidden" name="event_map" value="' + event_map.join() + '" />';
 	html += '</form></body></html>';
 	var popupsaving = window.open('', '_blank', 'toolbar=0, location=0, directories=0, menuBar=0, scrollbars=0, resizable=0, width=10, height=10');
-	popupsaving.document.open();
 	popupsaving.document.write(html);
 	popupsaving.document.close();
 }
@@ -545,7 +547,9 @@ function construct_tileset(lower_img, upper_img)
 	
 		if ( lower_tiles_img[count] != '' )
 		{
-			background = ';background-color:' + tileset_color + ';background-image:url(images/tiles/' + lower_tiles_img[count] + ')';
+            var img = '\'images/tiles/' + lower_tiles_img[count] +'\'';
+            background = ';background-color:' + tileset_color + ';background-image:url('+ img +')';
+			// background = ';background-color:' + tileset_color + ';background-image:url(images/tiles/' + lower_tiles_img[count] + ')';
 		}
 		else
 		{
@@ -580,7 +584,8 @@ function construct_tileset(lower_img, upper_img)
 
 		if ( upper_tiles_img[count] != '' )
 		{
-			background = ';background-color:' + tileset_color + ';background-image:url(images/tiles/' + upper_tiles_img[count] + ')';
+            var img = '\'images/tiles/' + upper_tiles_img[count] +'\'';
+			background = ';background-color:' + tileset_color + ';background-image:url('+ img +')';
 		}
 		else
 		{

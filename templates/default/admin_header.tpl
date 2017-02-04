@@ -1,7 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" dir="{DIRECTION}">
-
+<!doctype html>
+<html lang="en" dir="{DIRECTION}">
 <head>
+ <meta charset="UTF-8">
+ <meta name="viewport"
+       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+ <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <meta http-equiv="Content-Style-Type" content="text/css" />
 <meta http-equiv="Content-Type" content="text/html; charset={ENCODING}" />
 <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
@@ -11,7 +14,6 @@
 <!-- BEGIN redirect -->
 <meta http-equiv="refresh" content="{redirect.TIMEOUT};{redirect.HTML_LOCATION}" />
 <script type="text/javascript">
-<!--
 function location_timeout(time)
 {
 	if ( document.getElementById('redirect_timeout') )
@@ -27,15 +29,9 @@ function location_redirect()
 {
 	document.location.href = '[redirect.LOCATION]';
 }
-setTimeout('location_redirect();', ({redirect.TIMEOUT} * 1000));
-//-->
+setTimeout('location_redirect()', ({redirect.TIMEOUT} * 1000));
 </script>
-<!-- END redirect -->
-<script type="text/javascript">
-<!--
-parent.document.title = document.title;
-//-->
-</script>
+ <!-- END redirect -->
 </head>
 
 

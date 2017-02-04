@@ -22,24 +22,24 @@
  </tr>
 
  <tr>
-  <td class="cat" align="center" width="50%">{L_ALLIES}</td>
   <td class="cat" align="center" width="50%">{L_OPPONENTS}</td>
+  <td class="cat" align="center" width="50%">{L_ALLIES}</td>
  </tr>
 
  <tr>
   <td style="background-color:black" align="center" valign="middle" colspan="2">
-  <div style="width:640px;height:320px;background-image:url(images/backgrounds/{BATTLE_BACKGROUND});padding:0px">
+  <div style="width:640px;height:320px;background-image:url('images/backgrounds/{BATTLE_BACKGROUND}');background-size:contain;padding:0px">
 
-  <table cellpadding="0" cellspacing="0" border="1" bordercolor="black">
+  <table cellpadding="0" cellspacing="0" border="0" bordercolor="black">
   <tr><td align="center">
+    <div id="opponents" style="width:318px;height:318px;overflow:auto">
+    </div>
 
-  <div id="allies" style="width:318px;height:318px;overflow:auto">
-  </div>
 
   </td><td align="center">
 
-  <div id="opponents" style="width:318px;height:318px;overflow:auto">
-  </div>
+    <div id="allies" style="width:318px;height:318px;overflow:auto">
+    </div>
 
   </td></tr>
   </table>
@@ -67,7 +67,6 @@
 
 </table>
 <script type="text/javascript">
-<!--
 var my_user_id = {USER_ID};
 var my_user_name = '[USER_NAME]';
 var refresh_method = {REFRESH_METHOD};
@@ -86,7 +85,22 @@ var message_box = new Object();
 message_box.begin = '<table cellspacing="0" cellpadding="0" border="0"><tr><td class="m_top_left"><div class="m_top_left_div"></div></td><td class="m_top_center"></td><td class="m_top_right"></td></tr><tr><td class="m_middle_left"></td><td class="m_middle_center">';
 message_box.end = '</td><td class="m_middle_right"></td></tr><tr><td class="m_bottom_left"></td><td class="m_bottom_center"></td><td class="m_bottom_right"><div class="m_bottom_right_div"></div></td></tr></table>';
 
-var player_tools = '<form onsubmit="return false;">[L_BASIC_ACTION] : <select name="basic_action_select" id="basic_action_select"><option value="1">[L_ACT_ATTACK]</option><option value="2">[L_ACT_DEFEND]</option><option value="3">[L_ACT_FLEE]</option></select> <input type="button" value="[L_VALIDATE]" class="button" onclick="basic_action();" /></form>';
+var player_tools = '<form onsubmit="return false;">' +
+    '[L_BASIC_ACTION] : <select name="basic_action_select" id="basic_action_select">' +
+    '<option value="1">[L_ACT_ATTACK]</option>' +
+    '<option value="2">[L_ACT_DEFEND]</option>' +
+    '<option value="3">[L_ACT_FLEE]</option>' +
+    '</select> <input type="button" value="[L_VALIDATE]" class="button" onclick="basic_action();" />' +
+    '</form>';
+var tank_player_tools = '<form onsubmit="return false;">' +
+    '[L_TANK_ACTION] : <select name="tank_action_select" id="tank_action_select">' +
+    '<option value="1">[L_TANK_MAIN_CANNON]</option>' +
+    '<option value="2">[L_TANK_SUBCANNON]</option>' +
+    '<option value="3">[L_TANK_SE]</option>' +
+    '<option value="4">[L_TANK_SHELLS]</option>' +
+    '<option value="5">[L_ACT_FLEE]</option>' +
+    '</select> <input type="button" value="[L_VALIDATE]" class="button" onclick="tank_action();" />' +
+    '</form>';
 var player_waiting = '[L_WAIT_TURN]<br /><span id="timeout"></span>';
 
 var user_speed = {USER_SPEED};
@@ -105,9 +119,7 @@ function battle_preload()
 	chat_history = false;
 	battle_timeout({USER_SPEED});
 }
-
 //setTimeout('remove_ally(2);', 5000);
-//-->
 </script>
 <script type="text/javascript" src="javascript/battle.js"></script>
 

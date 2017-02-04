@@ -1,182 +1,138 @@
 <?php
+/**
+ *
+ * @author è·¯æ¼«æ¼«
+ * @link ahmerry@qq.com
+ * @version V1.0
+ * @since
+ * <p>v0.9 2017/1/2 13:52  åˆç‰ˆ</p>
+ */
 
-/*
-
-Program: phpore
-Author: Jeremy Faivre
-Contact: http://www.jeremyfaivre.com/about
-Year: 2005
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-*/
-
-// on ne néglige aucune erreur, alors on active l'affichage de toutes les erreurs
-error_reporting(E_ALL);
-
-if ( phpversion() < 4.3 )
-{
-	die('You must have php 4.3 or higher to use this program');
-}
-
-// temps d'exécution
-function execution_time($content = false) 
-{
-	global $execution_time, $db;
-
-	list($usec, $sec) = explode(' ', microtime());
-
-	if ( !$content )
-	{
-		$execution_time = doubleval($usec) + doubleval($sec);
-	}
-	else
-	{
-		return str_replace('<span id="execution_time"></span>', '<span id="execution_time">' . round(doubleval($usec) + doubleval($sec) - $execution_time, 3) . ' s - ' . $db->num_queries . ' queries</span>', $content);
-	}
-}
-
-execution_time();
-
-// définition de la constante certifiant que PHPore a démarré
+ini_set("display_errors", "On");
+error_reporting(-1);
+//è®¾ç½®å…¨å±€å¸¸é‡
+define('MFPATH' , str_replace('\\', '/', __DIR__).'/');
+define('BASE_URL' , 'http://e.cn/');
 define('IN_PHPORE', true);
+define('INC', MFPATH.'includes/');
+define('CONFIG_PATH', MFPATH.'Config/');
+defined('RUN_PATH') ? : define('RUN_PATH' , MFPATH.'RunData/');
 
-// création de l'objet $config
+
 settype($config, 'object');
-
-// récupération de l'extension des fichiers php et définition de la racine du répertoire
-$config->phpex = preg_replace('`^(.*?)\.([a-z0-9\-_]*)$`s', '$2', $_SERVER['PHP_SELF']);
+$config->phpex = 'php';
 $config->path = './';
+//å¼•å…¥å…¨å±€æ–¹æ³•
+require_once INC.'common.php';
+require_once INC.'MFDB.php';
 
-// on charge les fichiers indispensables au bon fonctionnement du script
-require($config->path . 'includes/config.' . $config->phpex);
-require($config->path . 'includes/common.' . $config->phpex);
+$config->table_prefix = 'phpore_';
 
-// on finit l'initialisation de l'objet $config
-$config = new config($config);
-
-// connexion é la base de données
-$db = new sql_db($config->db_host, $config->db_user, $config->db_password, $config->db_name, false);
-unset($config->db_host, $config->db_user, $config->db_password, $config->db_name);
-
-if( !$db->db_connect_id )
-{
-   die('Could not connect to the database');
-}
-
-// maintenant qu'on est connecté é la base de donnée, on récupére les infos de configuration sur la base de données
+$config = new Config($config);
+define('BATTLES_TABLE', $config->table_prefix . 'battles');
+define('BATTLES_VARS_TABLE', $config->table_prefix . 'battles_vars');
+define('CLASSES_TABLE', $config->table_prefix . 'classes');
+define('CHATBOX_TABLE', $config->table_prefix . 'chatbox');
+define('CONFIG_TABLE', $config->table_prefix . 'config');
+define('EVENTS_TABLE', $config->table_prefix . 'events');
+define('GUILDS_TABLE', $config->table_prefix . 'guilds');
+define('MAPS_TABLE', $config->table_prefix . 'maps');
+define('MONSTERS_TABLE', $config->table_prefix . 'monsters');
+define('OPPONENTS_TABLE', $config->table_prefix . 'opponents');
+define('SKILLS_TABLE', $config->table_prefix . 'skills');
+define('TILESETS_TABLE', $config->table_prefix . 'tilesets');
+define('USERS_TABLE', $config->table_prefix . 'users');
+define('VARS_TABLE', $config->table_prefix . 'vars');
+// è¿æ¥æ•°æ®åº“
+$db = MFDB::Ins();
 $config->load_db();
 
+//ç¼“å­˜æ¸…ç†
 $actual_day_number = floor(time() / 86400);
-if ( $config->day_number < $actual_day_number ) // systéme de pseudo-cron
-{
-	require($config->path . 'includes/cron_day.' . $config->phpex);
+if ( $config->day_number < $actual_day_number ){
+    require_once INC . 'cron_day.php';
 }
 
-// récupération des données de la langue courante
-include($config->path. 'language/' . $config->language . '/main.' . $config->phpex);
+//è½½å…¥è¯­è¨€
+require_once MFPATH . 'language/'. $config->language.'.php';
 $lang->load_keys('common');
 
-// démarrage du systéme de template
-$template = new template();
+//æ¨¡ç‰ˆå®ä¾‹åŒ–
+$template = new Template();
 
-// démarrage de la session
-$user = new user();
+$user = new User();
 
-if ( $user->logged_in ) // déconnecté (invité)
-{
+if ( $user->logged_in ) {
 	$template->assign_block_vars('logged_in', array());
-}
-else // connecté sous un compte utilisateur
-{
+} else {
 	$template->assign_block_vars('not_logged_in', array());
 }
 
-// les variables par défaut du template
 $template->assign_vars(array(
 	'SITE_NAME' => $config->site_name,
 	'SITE_DESC' => $config->site_desc,
 	'TEMPLATE_PATH' => 'templates/' . $config->template . '/',
 	'SITE_DESC' => $config->site_desc,
-	'U_INDEX' => $config->index,
-	'PATH' => $config->path,
+	'U_INDEX' => 'index.php',
+	'PATH' => MFPATH,
 	'USER_ID' => $user->id,
 	'USER_NAME' => $user->name,
-	'COPYRIGHT' => 'Program written by <a href="http://www.jeremyfaivre.com" onclick="window.open(this.href);return false">J&eacute;r&eacute;my Faivre</a> - 2005 &copy; <a href="http://www.jeremyfaivre.com/tags/phpore" onclick="window.open(this.href);return false">phpore</a>',
-	'DIRECTION' => $lang->direction,
+	'COPYRIGHT' => '<h3><a href="http://duanxq.cn"><strong>è·¯æ¼«æ¼«</strong>ç‰ˆæƒæ‰€æœ‰ @2016-2099 </a></h3>',
+	'DIRECTION' => $lang->screenDirection,
 	'ENCODING' => $lang->encoding,
-	//
-	));
+));
 
-if ( $user->admin )
-{
+if ( $user->admin ) {
 	$template->assign_block_vars('admin_panel', array());
 }
 
-if ( $config->use_gzip == 1 ) // compression gzip activée
-{
+if ( $config->use_gzip == 1 ) {
+    //GZIPå‹ç¼©
 	ob_start('ob_gzhandler');
 	$config->use_gzip = true;
-}
-else
-{
+} else {
 	$config->use_gzip = false;
 }
 
-ob_start('execution_time');
+//ob_start('execution_time');
 
 
-// chargement du module
 if ( !empty($_GET['mod']) && ( ( preg_match('`^([a-z0-9\-_]+)$`', $_GET['mod']) && is_file($config->path . 'modules/' . $_GET['mod'] . '.' . $config->phpex) ) || ( preg_match('`^(admin\.[a-z0-9\-_]+)$`', $_GET['mod']) && $user->admin && is_file($config->path . 'modules/' . $_GET['mod'] . '.' . $config->phpex) ) ) )
 {
-	if ( $user->in_battle && substr($_GET['mod'], 0, 6) != 'admin.' && $_GET['mod'] != 'default' && $_GET['mod'] != 'map' && $_GET['mod'] != 'profile' ) // personnage en combat
+	if ( $user->in_battle && substr($_GET['mod'], 0, 6) != 'admin.' && $_GET['mod'] != 'default' && $_GET['mod'] != 'map' && $_GET['mod'] != 'profile' )
 	{
 			$user->set('actual_mod', 'battle');
 
 			if ( $_GET['mod'] == 'battle' )
 			{
-				require($config->path . 'modules/battle.' . $config->phpex);
+				require(MFPATH . 'modules/battle.php');
 			}
-			else
-			{
-				header('Location: ' . $config->path . $config->index . '?mod=battle');
-				exit;
-			}
-	}
-	else
-	{
-		if ( substr($_GET['mod'], 0, 6) != 'admin.' )
-		{
+//			else
+//			{
+//				header('Location: ' . $config->path . $config->index . '?mod=battle');
+//				exit;
+//			}
+	} else {
+		if ( substr($_GET['mod'], 0, 6) != 'admin.' ) {
 			$user->set('actual_mod', $_GET['mod']);
 		}
-		//if ( $user->logged_in && !$user->in_battle ) create_battle(1, $user->id, '047-Mine01.jpg', '022-Field05.mid');
-		require($config->path . 'modules/' . $_GET['mod'] . '.' . $config->phpex); // le module est valide, on le charge
+//		if ( $user->logged_in && !$user->in_battle ) create_battle(1, $user->id, '047-Mine01.jpg', '022-Field05.mid');
+
+		require(MFPATH . 'modules/' . $_GET['mod'] . '.php');
 	}
-}
-elseif ( !empty($user->actual_mod) )
-{
-	// le module actuel de l'utilisateur est chargé si un autre n'est pas spécifié dans l'adresse
+} elseif ( !empty($user->actual_mod) ) {
 	header('Location: ' . $config->path . $config->index . '?mod=' . $user->actual_mod);
 	exit;
-}
-else
-{
-	// s'il n'y a pas de module trouvé, on charge le module par défaut
+} else {
 	$user->set('actual_mod', 'default');
 	header('Location: ' . $config->path . $config->index . '?mod=default');
 	exit;
 }
 
-// mise à jour de la config et de l'utilisateur dans la base de données si nécessaire
+//æ›´æ–°æ•°æ®åº“
 $user->update_db();
 $config->update_db();
 
 while ( @ob_end_flush() );
 exit;
 
-// fin du script
-
-?>

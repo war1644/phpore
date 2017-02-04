@@ -1,36 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" dir="{DIRECTION}">
-
+<!doctype html>
+<html lang="en" dir="{SCREEN_DIRECTION}">
 <head>
-<meta http-equiv="Content-Style-Type" content="text/css" />
-<meta http-equiv="Content-Type" content="text/html; charset={ENCODING}" />
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-<title>{SITE_NAME} - {PAGE_NAME}</title>
-<link rel="stylesheet" href="{TEMPLATE_PATH}style.css" type="text/css" />
-<script type="text/javascript" src="javascript/common.js"></script>
-<!-- BEGIN redirect -->
-<meta http-equiv="refresh" content="{redirect.TIMEOUT};{redirect.HTML_LOCATION}" />
-<script type="text/javascript">
-<!--
-function location_timeout(time)
-{
-	if ( document.getElementById('redirect_timeout') )
-	{
-		document.getElementById('redirect_timeout').innerHTML = time;
-		if ( time > 0 )
-		{
-			setTimeout('location_timeout(' + (time - 1) + ');', 1000);
-		}
-	}
-}
-function location_redirect()
-{
-	document.location.href = '[redirect.LOCATION]';
-}
-setTimeout('location_redirect();', ({redirect.TIMEOUT} * 1000));
-//-->
-</script>
-<!-- END redirect -->
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+   <title>{SITE_NAME} - {PAGE_NAME}</title>
+   <link rel="stylesheet" href="{TEMPLATE_PATH}style.css" type="text/css" />
+ <script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+ <script type="text/javascript" src="javascript/common.js"></script>
+   <!-- BEGIN redirect -->
+   <meta http-equiv="refresh" content="{redirect.TIMEOUT};{redirect.HTML_LOCATION}" />
+   <script type="text/javascript">
+   function location_timeout(time)
+   {
+       if ( document.getElementById('redirect_timeout') )
+       {
+           document.getElementById('redirect_timeout').innerHTML = time;
+           if ( time > 0 )
+           {
+               setTimeout('location_timeout(' + (time - 1) + ');', 1000);
+           }
+       }
+   }
+   function location_redirect()
+   {
+       document.location.href = '[redirect.LOCATION]';
+   }
+   setTimeout('location_redirect();', ({redirect.TIMEOUT} * 1000));
+   </script>
+   <!-- END redirect -->
 
 </head>
 
@@ -41,7 +40,7 @@ setTimeout('location_redirect();', ({redirect.TIMEOUT} * 1000));
 <bgsound src="music/{bgsound_ie.MUSIC}" loop="-1" />
 <!-- END bgsound_ie -->
 <!-- BEGIN bgsound_ns -->
-<object data="music/{bgsound_ns.MUSIC}" type="audio/midi" width="0" height="0"><param name="src" value="music/{bgsound_ns.MUSIC}" /><param name="autostart" value="true" /><param name="loop" value="true" /></object>
+<audio src="music/{bgsound_ns.MUSIC}" autoplay loop></audio>
 <!-- END bgsound_ns -->
 
 <table class="bodyline" width="100%" cellspacing="0" cellpadding="0" border="0">
@@ -63,15 +62,13 @@ setTimeout('location_redirect();', ({redirect.TIMEOUT} * 1000));
     <span class="gensmall">{SITE_DESC}&nbsp;-&nbsp;<span id="clock"></span>&nbsp;-&nbsp;<a href="{U_INDEX}?mod=default" style="color:black">{L_GO_TO_RECEPTION}</a></span>
     
     <script type="text/javascript">
-    <!--
-    function clock()
-    {
-     Stamp = new Date();
-     document.getElementById("clock").innerHTML = (Stamp.getHours() < 10 ? "0" + Stamp.getHours() : Stamp.getHours()) + ":" + (Stamp.getMinutes() < 10 ? "0" + Stamp.getMinutes() : Stamp.getMinutes() ) + ":" + (Stamp.getSeconds() < 10 ? "0" + Stamp.getSeconds() : Stamp.getSeconds() );
-     setTimeout("clock();",1000);
+    //在页面显示时间更新
+    function clock() {
+        Stamp = new Date();
+        document.getElementById("clock").innerHTML = (Stamp.getHours() < 10 ? "0" + Stamp.getHours() : Stamp.getHours()) + ":" + (Stamp.getMinutes() < 10 ? "0" + Stamp.getMinutes() : Stamp.getMinutes() ) + ":" + (Stamp.getSeconds() < 10 ? "0" + Stamp.getSeconds() : Stamp.getSeconds() );
+        setTimeout("clock();", 1000);
     }
     clock();
-    //-->
     </script>
 
     </td>

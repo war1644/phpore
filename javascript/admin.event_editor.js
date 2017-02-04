@@ -658,16 +658,17 @@ function save_event()
 	{
 		event_saving_dir = '';
 	}
-
-	var html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Style-Type" content="text/css" /><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" /><title></title></head><body onload="document.getElementById(\'save_form\').submit();">';
+    var textScirpt = document.getElementById('text_script').value;
+    // console.log(textScirpt);
+    var html = '<!doctype html><html lang="en"><head><meta charset="UTF-8"><title></title></head><body onload="document.getElementById(\'save_form\').submit();">';
 	html += '<form method="post" action="' + u_index + '?mod=admin.map" id="save_form">';
 	html += '<input type="hidden" name="mode" value="save_event" />';
 	html += '<input type="hidden" name="event_id" value="' + event_id + '" />';
 	html += '<input type="hidden" name="event_layer" value="' + event_layer + '" />';
 	html += '<input type="hidden" name="event_dir" value="' + event_saving_dir + '" />';
-	html += '<input type="hidden" name="event_name" value="' + urlencode(event_name) + '" />';
-	html += '<input type="hidden" name="event_picture" value="' + urlencode(event_picture) + '" />';
-	html += '<input type="hidden" name="text_script" value="' + urlencode(document.getElementById('text_script').value) + '" />';
+	html += '<input type="hidden" name="event_name" value="' + event_name + '" />';
+	html += '<input type="hidden" name="event_picture" value="' + event_picture + '" />';
+	html += '<input type="hidden" name="text_script" value="' + textScirpt + '" />';
 	html += '</form></body></html>';
 	var popupsaving = window.open('', '_blank', 'toolbar=0, location=0, directories=0, menuBar=0, scrollbars=0, resizable=0, width=10, height=10');
 	popupsaving.document.open();

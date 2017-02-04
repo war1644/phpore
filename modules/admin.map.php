@@ -14,14 +14,11 @@ the Free Software Foundation; either version 2 of the License, or
 
 */
 
-if ( !defined('IN_PHPORE') )
-{
-	exit;
-}
+MFLog(json_encode($_POST));
 
 if ( !$user->logged_in || !$user->admin )
 {
-	header('Location: ' . $config->path . $config->index . '?mod=login');
+	header('Location: ' . MFPATH . $config->index . '?mod=login');
 	exit;
 }
 
@@ -34,7 +31,7 @@ if ( $mode == 'GET.synchro_pic' )
 
 	while ( $row = $db->sql_fetchrow($result) )
 	{
-		if ( !empty($row['charaset']) && $size = @getimagesize($config->path . 'images/charasets/' . $row['charaset']) )
+		if ( !empty($row['charaset']) && $size = getimagesize(MFPATH . 'images/charasets/' . $row['charaset']) )
 		{
 			$db->sql_query('UPDATE ' . CLASSES_TABLE . ' SET pic_width = ' . $size[0] . ', pic_height = ' . $size[1] . ' WHERE classname = \'' . quotes($row['classname']) . '\'');
 		}
@@ -49,7 +46,7 @@ if ( $mode == 'GET.synchro_pic' )
 
 	while ( $row = $db->sql_fetchrow($result) )
 	{
-		if ( !empty($row['charaset']) && $size = @getimagesize($config->path . 'images/charasets/' . $row['charaset']) )
+		if ( !empty($row['charaset']) && $size = @getimagesize(MFPATH . 'images/charasets/' . $row['charaset']) )
 		{
 			$db->sql_query('UPDATE ' . USERS_TABLE . ' SET pic_width = ' . $size[0] . ', pic_height = ' . $size[1] . ' WHERE id = ' . $row['id']);
 		}
@@ -64,11 +61,11 @@ if ( $mode == 'GET.synchro_pic' )
 
 	while ( $row = $db->sql_fetchrow($result) )
 	{
-		if ( $row['dir'] == '' && !empty($row['picture']) && $size = @getimagesize($config->path . 'images/sprites/' . $row['picture']) )
+		if ( $row['dir'] == '' && !empty($row['picture']) && $size = @getimagesize(MFPATH . 'images/sprites/' . $row['picture']) )
 		{
 			$db->sql_query('UPDATE ' . EVENTS_TABLE . ' SET pic_width = ' . $size[0] . ', pic_height = ' . $size[1] . ' WHERE id = ' . $row['id']);
 		}
-		elseif ( !empty($row['picture']) && $size = @getimagesize($config->path . 'images/charasets/' . $row['picture']) )
+		elseif ( !empty($row['picture']) && $size = @getimagesize(MFPATH . 'images/charasets/' . $row['picture']) )
 		{
 			$db->sql_query('UPDATE ' . EVENTS_TABLE . ' SET pic_width = ' . $size[0] . ', pic_height = ' . $size[1] . ' WHERE id = ' . $row['id']);
 		}
@@ -93,7 +90,7 @@ elseif ( $mode == 'POST.save_tileset' ) // sauver tileset
 	}
 
 	$tileset_id = intval($_POST['tileset_id']);
-	$tileset_name = htmlspecialchars(trim(urldecode($_POST['tileset_name'])));
+	$tileset_name = htmlspecialchars(trim($_POST['tileset_name']));
 	$lower_tiles_img = explode(',', trim($_POST['lower_img']));
 	$lower_tiles_value = explode(',', trim($_POST['lower_value']));
 	$upper_tiles_img = explode(',', trim($_POST['upper_img']));
@@ -122,12 +119,11 @@ elseif ( $mode == 'POST.save_tileset' ) // sauver tileset
 		$upper_tiles_value[$key] = intval($upper_tiles_value[$key]);
 		$key++;
 	}
-
-	$db->sql_query('UPDATE ' . TILESETS_TABLE . ' SET name = \'' . quotes($tileset_name) . '\', tiles = \'' . quotes(serialize(array(array($lower_tiles_img, $lower_tiles_value), array($upper_tiles_img, $upper_tiles_value)))) . '\' WHERE id = ' . $tileset_id);
-	//$db->sql_query('UPDATE ' . USERS_TABLE . ' SET refresh = 1 WHERE id > 1');
+    $tmp = base64_encode(serialize(array(array($lower_tiles_img, $lower_tiles_value), array($upper_tiles_img, $upper_tiles_value))));
+	$db->sql_query('UPDATE ' . TILESETS_TABLE . " SET name = '$tileset_name', tiles ='$tmp' WHERE id = $tileset_id");
 
 	$lang->load_keys('tileset_editor');
-	js_eval('alert(\'' . quotes($lang->tileset_saved) . '\');saved=true;', $refresh_id, 1);
+	js_eval('alert(\'' . $lang->tileset_saved . '\');saved=true;', $refresh_id, 1);
 }
 elseif ( $mode == 'POST.save_event' ) // sauver �v�nement
 {
@@ -141,17 +137,17 @@ elseif ( $mode == 'POST.save_event' ) // sauver �v�nement
 	$event_id = intval($_POST['event_id']);
 	$event_layer = ( $_POST['event_layer'] != 0 ) ? 1 : 0;
 	$event_dir = ( preg_match('`^([0-3])_([0-3])_([0-1])$`', $_POST['event_dir'], $matches) ) ? $matches[1] . ',' . $matches[2] . ',' . $matches[3] : '';
-	$event_name = htmlspecialchars(trim(urldecode($_POST['event_name'])));
-	$event_picture = trim(urldecode($_POST['event_picture']));
-	$text_script = trim(urldecode($_POST['text_script']));
+	$event_name = htmlspecialchars(trim($_POST['event_name']));
+	$event_picture = trim($_POST['event_picture']);
+	$text_script = trim($_POST['text_script']);
 
 	if ( $event_dir == '' )
 	{
-		$picture_path = $config->path . 'images/sprites/';
+		$picture_path = MFPATH . 'images/sprites/';
 	}
 	else
 	{
-		$picture_path = $config->path . 'images/charasets/';
+		$picture_path = MFPATH . 'images/charasets/';
 	}
 
 	$size = @getimagesize($picture_path . $event_picture);
@@ -167,25 +163,25 @@ elseif ( $mode == 'POST.save_event' ) // sauver �v�nement
 		$height = intval($size[1]);
 	}
 
-	require($config->path . 'includes/functions_map.' . $config->phpex);
-
-	$event_script = new event_script();
+    require(INC.'functions_map.php');
+	$event_script = new EventScript();
 
 	list($compiled, $result) = $event_script->compile($text_script);
-
 	if ( !$compiled )
 	{
 		die('<pre>'.$result.'</pre>');
-		js_eval('alert(\'' . quotes($result) . '\');', $refresh_id, 1);
+		js_eval('alert(\'' . $result . '\');', $refresh_id, 1);
 	}
-
-	$db->sql_query('UPDATE ' . EVENTS_TABLE . ' SET dir = \'' . $event_dir . '\', name = \'' . quotes($event_name) . '\', picture = \'' . quotes($event_picture) . '\', pic_width = ' . $width . ', pic_height = ' . $height . ', text_script = \'' . quotes($text_script) . '\', script = \'' . quotes(serialize($result)) . '\', layer = ' . $event_layer . ' WHERE id = ' . $event_id);
+    $tmp = base64_encode(serialize($result));
+    $text_script = addslashes($text_script);
+	$sql = 'UPDATE ' . EVENTS_TABLE . " SET dir = '$event_dir', `name` = '$event_name', picture = '$event_picture', pic_width = $width, pic_height = $height, text_script ='$text_script', script = '$tmp', layer = '$event_layer' WHERE id = $event_id";
+	$db->sql_query($sql);
 	//$db->sql_query('UPDATE ' . USERS_TABLE . ' SET refresh = 1 WHERE id > 1');
 
 	$lang->load_keys('event_editor');
-	js_eval('alert(\'' . quotes($lang->event_saved) . '\');', $refresh_id, 1);
+	js_eval('alert(\'' . $lang->event_saved . '\');', $refresh_id, 1);
 }
-elseif ( $mode == 'POST.default_start_position' ) // changer position de d�part
+elseif ( $mode == 'POST.default_start_position' ) // 设置初始玩家位置
 {
 	$refresh_id = 1;
 	$lang->load_keys('map_editor');
@@ -216,19 +212,18 @@ elseif ( $mode == 'POST.default_start_position' ) // changer position de d�par
 		$map_top = intval($_POST['map_top']);
 
 		$config->set('default_location', $map_id . ',' . $map_left . ',' . $map_top . ',' . $map_dir);
-
-		js_eval('alert(\'' . quotes($lang->action_done) . '\');', $refresh_id, 1);
+		$config->update_db();
+		js_eval("alert('$lang->action_done');", $refresh_id, 1);
 	}
 	else
 	{
 		exit;
 	}
 }
-elseif ( $mode == 'POST.players_position' ) // d�placer les joueurs
+elseif ( $mode == 'POST.players_position' ) // 设置已注册玩家的位置
 {
 	$refresh_id = 1;
 	$lang->load_keys('map_editor');
-
 	if (isset($_POST['map_id'], $_POST['map_left'], $_POST['map_top'], $_POST['map_dir']) )
 	{
 		$map_dir = intval($_POST['map_dir']);
@@ -254,9 +249,9 @@ elseif ( $mode == 'POST.players_position' ) // d�placer les joueurs
 		$map_left = intval($_POST['map_left']);
 		$map_top = intval($_POST['map_top']);
 
-		$db->sql_query('UPDATE ' . USERS_TABLE . ' SET refresh = 1, map_id = ' . $map_id . ', map_left = ' . $map_left . ', map_top = ' . $map_top . ', map_dir = ' . $map_dir . ' WHERE id > 1');
+		$db->sql_query('UPDATE ' . USERS_TABLE . " SET refresh = 1, map_id = $map_id, map_left = $map_left, map_top = $map_top, map_dir = $map_dir WHERE id > 1");
 
-		js_eval('alert(\'' . quotes($lang->action_done) . '\');', $refresh_id, 1);
+		js_eval("alert('$lang->action_done'));", $refresh_id, 1);
 	}
 	else
 	{
@@ -306,7 +301,7 @@ elseif ( $mode == 'POST.preset_event' ) // �v�nement pr�d�fini
 
 		$event_name = $lang->teleport . ' : ' . $map_id . '. ' . $map_name . ' [' . $map_left . ',' . $map_left . ']';
 
-		$size = @getimagesize($config->path . 'images/sprites/' . $config->preset_teleport_sprite);
+		$size = @getimagesize(MFPATH . 'images/sprites/' . $config->preset_teleport_sprite);
 
 		if ( !is_array($size) )
 		{
@@ -319,13 +314,10 @@ elseif ( $mode == 'POST.preset_event' ) // �v�nement pr�d�fini
 			$height = intval($size[1]);
 		}
 
-		$result = $db->sql_query('SELECT MAX(id) AS max FROM ' . EVENTS_TABLE);
-		$id = $db->sql_fetchrow($result);
-		$id = $id['max'] + 1;
 
-		require($config->path . 'includes/functions_map.' . $config->phpex);
+		require(INC.'functions_map.php');
 
-		$event_script = new event_script();
+		$event_script = new EventScript();
 
 		list($compiled, $result) = $event_script->compile($text_script);
 
@@ -333,9 +325,9 @@ elseif ( $mode == 'POST.preset_event' ) // �v�nement pr�d�fini
 		{
 			js_eval('alert(\'' . quotes($result) . '\');', $refresh_id, 1);
 		}
-
-		$db->sql_query('INSERT INTO ' . EVENTS_TABLE . '(id, name, picture, pic_width, pic_height, dir, text_script, script, layer) VALUES(' . $id . ', \'' . quotes($event_name) . '\', \'' . quotes($config->preset_teleport_sprite) . '\', ' . $width . ', ' . $height . ', \'\', \'' . quotes($text_script) . '\', \'' . quotes(serialize($result)) . '\', 0)');
-
+        $tmp = base64_encode(serialize($result));
+		$db->sql_query('INSERT INTO ' . EVENTS_TABLE . "(`name`, picture, pic_width, pic_height, dir, text_script, script, layer) VALUES('$event_name','$config->preset_teleport_sprite', $width,$height, '', '$text_script', '$tmp', 0)");
+        $id = $db->lastId();
 		$lang->load_keys('event_editor');
 		js_eval('alert(\'' . quotes($lang->event_saved) . '\');remake_event_list(' . $id . ', \'' . quotes($event_name) . '\', \'' . quotes($config->preset_teleport_sprite) . '\', ' . $width . ', ' . $height . ', false);', $refresh_id, 1);
 	}
@@ -348,7 +340,7 @@ elseif ( $mode == 'GET.event_editor' ) // �diteur d'�v�nement
 {
 	if ( empty($_GET['event_id']) )
 	{
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=select_event_to_edit');
+		header('Location: ' . MFPATH . $config->index . '?mod=admin.map&mode=select_event_to_edit');
 		exit;
 	}
 
@@ -376,7 +368,7 @@ elseif ( $mode == 'GET.event_editor' ) // �diteur d'�v�nement
 		9 => $lang->teleport_character,
 		10 => $lang->exec_javascript,
 		11 => $lang->exec_php
-		);
+    );
 
 	foreach ( $commands as $key => $val )
 	{
@@ -496,13 +488,13 @@ elseif ( $mode == 'POST.export_tileset' )
 {
 	if ( empty($_POST['tileset_id']) )
 	{
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=select_tileset_to_export');
+		header('Location: ' . MFPATH . $config->index . '?mod=admin.map&mode=select_tileset_to_export');
 		exit;
 	}
 
 	$tileset_id = intval($_POST['tileset_id']);
 
-	$result = $db->sql_query('SELECT tiles, name, cols FROM ' . TILESETS_TABLE . ' WHERE id = ' . $tileset_id);
+	$result = $db->sql_query('SELECT tiles, `name`, cols FROM ' . TILESETS_TABLE . ' WHERE id = ' . $tileset_id);
 
 	if ( !$row = $db->sql_fetchrow($result) )
 	{
@@ -516,7 +508,7 @@ elseif ( $mode == 'POST.export_tileset' )
 	$tileset['tiles'] = $row['tiles'];
 	$tileset['cols'] = $row['cols'];
 
-	$row['tiles'] = unserialize($row['tiles']);
+	$row['tiles'] = unserialize(base64_decode($row['tiles']));
 
 	foreach ( $row['tiles'][0][0] as $val ) // couche inf�rieure
 	{
@@ -536,13 +528,13 @@ elseif ( $mode == 'POST.export_tileset' )
 
 	foreach ( $tiles_images as $key => $val )
 	{
-		$tiles_images[$key] = file_get_contents($config->path . 'images/tiles/' . $key);
+		$tiles_images[$key] = file_get_contents(MFPATH . 'images/tiles/' . $key);
 	}
 
 	$tileset['tiles_images'] = $tiles_images;
-	$tileset = serialize($tileset);
+	$tileset = base64_encode(serialize($tileset));
 	$tileset = gzencode($tileset, 9);
-	$filename = $config->path . $config->cache_dir . $tileset_id . '_' . preg_replace('`([^a-z0-9\-_\.])`', '_', $tileset_name) . '.tileset';
+	$filename = MFPATH . $config->cache_dir . $tileset_id . '_' . preg_replace('`([^a-z0-9\-_\.])`', '_', $tileset_name) . '.tileset';
 
 	if ( !$handle = fopen($filename, 'w') )
 	{
@@ -571,7 +563,7 @@ elseif ( $mode == 'GET.import_tileset' )
 
 		ob_start();
 		readgzfile($_FILES['tileset_file']['tmp_name']);
-		$tileset = unserialize(ob_get_contents());
+		$tileset = unserialize(base64_decode(ob_get_contents()));
 		ob_end_clean();
 
 		if ( !isset($tileset['name'], $tileset['cols'], $tileset['tiles'], $tileset['tiles_images']) )
@@ -581,9 +573,9 @@ elseif ( $mode == 'GET.import_tileset' )
 
 		foreach ( $tileset['tiles_images'] as $key => $val )
 		{
-			if ( !is_file($config->path . 'images/tiles/' . $key) ) // si le fichier image n'existe pas, on le cr�e
+			if ( !is_file(MFPATH . 'images/tiles/' . $key) ) // si le fichier image n'existe pas, on le cr�e
 			{
-				$handle = fopen($config->path . 'images/tiles/' . $key, 'w');
+				$handle = fopen(MFPATH . 'images/tiles/' . $key, 'w');
 				$result = fwrite($handle, $val);
 				fclose($handle);
 			}
@@ -615,24 +607,24 @@ elseif ( $mode == 'GET.import_tileset' )
 	$template->pparse('footer');
 
 }
-elseif ( $mode == 'GET.tileset_editor' ) // �diteur de tileset
+elseif ( $mode == 'GET.tileset_editor' ) // 编辑瓦片集
 {
 	if ( empty($_GET['tileset_id']) )
 	{
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=select_tileset_to_edit');
+		header('Location: ' . BASE_URL . 'index.php?mod=admin.map&mode=select_tileset_to_edit');
 		exit;
 	}
 
 	$tileset_id = intval($_GET['tileset_id']);
 
-	$result = $db->sql_query('SELECT tiles, name, cols FROM ' . TILESETS_TABLE . ' WHERE id = ' . $tileset_id);
+	$result = $db->sql_query('SELECT tiles, `name`, cols FROM ' . TILESETS_TABLE . ' WHERE id = ' . $tileset_id);
 
 	if ( !$row = $db->sql_fetchrow($result) )
 	{
 		message_die('Error !', 'Could not get tileset !');
 	}
 
-	$row['tiles'] = unserialize($row['tiles']);
+	$row['tiles'] = unserialize(base64_decode($row['tiles']));
 
 	$tileset_cols = $row['cols'];
 	
@@ -644,8 +636,13 @@ elseif ( $mode == 'GET.tileset_editor' ) // �diteur de tileset
 	$i = 0;
 	while ( isset($row['tiles'][0][0][$i], $row['tiles'][0][1][$i]) )
 	{
-		$lower_tiles_img[] = '\'' . quotes($row['tiles'][0][0][$i]) . '\'';
-		$lower_tiles_value[] = $row['tiles'][0][1][$i];
+        if (!$row['tiles'][0][0][$i]){
+            $lower_tiles_img[]='\'town_0.png\'';
+            $lower_tiles_value[] = 0;
+        }else{
+            $lower_tiles_img[] = '\'' . $row['tiles'][0][0][$i] . '\'';
+            $lower_tiles_value[] = $row['tiles'][0][1][$i];
+        }
 
 		$i++;
 	}
@@ -653,9 +650,15 @@ elseif ( $mode == 'GET.tileset_editor' ) // �diteur de tileset
 	$i = 0;
 	while ( isset($row['tiles'][1][0][$i], $row['tiles'][1][1][$i]) )
 	{
-		$upper_tiles_img[] = '\'' . quotes($row['tiles'][1][0][$i]) . '\'';
-		$upper_tiles_value[] = $row['tiles'][1][1][$i];
-
+//		$upper_tiles_img[] = '\'' . quotes($row['tiles'][1][0][$i]) . '\'';
+//		$upper_tiles_value[] = $row['tiles'][1][1][$i];
+        if (!$row['tiles'][1][0][$i]){
+            $upper_tiles_img[]='\'town_0.png\'';
+            $upper_tiles_value[] = 0;
+        }else{
+            $upper_tiles_img[] = '\'' . $row['tiles'][1][0][$i] . '\'';
+            $upper_tiles_value[] = $row['tiles'][1][1][$i];
+        }
 		$i++;
 	}
 
@@ -672,7 +675,7 @@ elseif ( $mode == 'GET.tileset_editor' ) // �diteur de tileset
 
 	$tileset_id = intval($_GET['tileset_id']);
 
-	require($config->path . 'includes/functions_map.' . $config->phpex);
+//	require(MFPATH . 'includes/functions_map.' . $config->phpex);
 
 	$result = $db->sql_query('SELECT id, name FROM ' . TILESETS_TABLE . ' ORDER BY id ASC');
 
@@ -686,22 +689,14 @@ elseif ( $mode == 'GET.tileset_editor' ) // �diteur de tileset
 			));
 	}
 
-	$handle = opendir($config->path . 'images/tiles/');
-	$i = 0;
-
-	while ( false !== ( $file = readdir($handle) ) && $i < 1000 )
-	{
-		if ( preg_match('`([a-z0-9\-_]+)\.(png|gif|jpeg|jpg)$`i', $file) )
-		{
-			$template->assign_block_vars('tile', array(
-				'FILENAME' => $file
-				));
-
-			$i++;
-		}
-	}
-
-	closedir($handle);
+	$fileNameArr = scandir(MFPATH . 'images/tiles/');
+    sort($fileNameArr, SORT_NATURAL | SORT_FLAG_CASE);
+    $count = count($fileNameArr);
+    for ($i=2; $i < $count ; $i++) {
+        if ( preg_match( '`([a-z0-9\-_]+)\.(png|gif|jpeg|jpg)$`i', $fileNameArr[$i] ) ) {
+            $template->assign_block_vars( 'tile', ['FILENAME' => $fileNameArr[$i]] );
+        }
+    }
 
 	$template->assign_vars(array(
 		'PAGE_NAME' => $lang->tileset_editor,
@@ -774,7 +769,7 @@ elseif ( $mode == 'GET.resize_map' )
 			exit;
 		}
 
-		$map_old_blocs = unserialize($row['blocs']);
+		$map_old_blocs = unserialize(base64_decode($row['blocs']));
 		$map_old_width = count($map_old_blocs[0][0]);
 		$map_old_height = count($map_old_blocs[0]);
 		$map_blocs = array(array(), array(), array());
@@ -837,8 +832,8 @@ elseif ( $mode == 'GET.resize_map' )
 			unset($map_blocs[2][$k]);
 			$k++;
 		}
-
-		$db->sql_query('UPDATE ' . MAPS_TABLE . ' SET blocs = \'' . quotes(serialize($map_blocs)) . '\' WHERE id = ' . $map_id);
+        $tmp = base64_encode(serialize($map_blocs));
+		$db->sql_query('UPDATE ' . MAPS_TABLE . " SET blocs = '$tmp' WHERE id = $map_id");
 
 		message_die($lang->resize_map, $lang->map_resized, $config->index . '?mod=admin.map&mode=resize_map');
 	}
@@ -1014,31 +1009,32 @@ elseif ( $mode == 'GET.create_map' )
 		$i = 0;
 		while ( $i < $map_height )
 		{
-			$value = array();
+			$v = $value = array();
 			$j = 0;
 			while ( $j < $map_width )
 			{
 				$value[] = 0;
-				$j++;
+                $v[] = '';
+                $j++;
 			}
-			$map_blocs[0][] = $value;
-			$map_blocs[1][] = $value;
-			$map_blocs[2][] = $value;
+			$map_blocs[0][] = $value;//down layer
+			$map_blocs[1][] = $value;//up layer
+			$map_blocs[2][] = $value;//event layer
 			$j = 0;
 			$i++;
 		}
+		unset($value,$v);
 
-		$result = $db->sql_query('SELECT MAX(id) AS max FROM ' . MAPS_TABLE);
-		$id = $db->sql_fetchrow($result);
-		$id = $id['max'] + 1;
+        $map_blocs = base64_encode(serialize($map_blocs));
 
-		$db->sql_query('INSERT INTO ' . MAPS_TABLE . '(id, name, blocs, tileset) VALUES(' . $id . ', \'' . $map_name . '\', \'' . quotes(serialize($map_blocs)) . '\', ' . $map_tileset . ')');
+		$db->sql_query('INSERT INTO ' . MAPS_TABLE . "(`name`, blocs, tileset) VALUES('$map_name', '$map_blocs', '$map_tileset')");
+		$id = $db->lastId();
 
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=map_editor&map_id=' . $id);
+		header('Location:' . BASE_URL .'index.php?mod=admin.map&mode=map_editor&map_id=' . $id);
 		exit;
 	}
 
-	$result = $db->sql_query('SELECT id, name FROM ' . TILESETS_TABLE . ' ORDER BY id ASC');
+	$result = $db->sql_query('SELECT id, `name` FROM ' . TILESETS_TABLE . ' ORDER BY id ASC');
 
 	while ( $row = $db->sql_fetchrow($result) )
 	{
@@ -1076,7 +1072,7 @@ elseif ( $mode == 'GET.create_event' )
 
 		$db->sql_query('INSERT INTO ' . EVENTS_TABLE . '(id, name, picture, pic_width, pic_height, dir, text_script, script, layer) VALUES(' . $id . ', \'' . quotes($event_name) . '\', \'\', 0, 0, \'\', \'\', \'a:0:{}\', 0)');
 
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=event_editor&event_id=' . $id);
+		header('Location: ' . BASE_URL . 'index.php?mod=admin.map&mode=event_editor&event_id=' . $id);
 		exit;
 	}
 
@@ -1107,7 +1103,6 @@ elseif ( $mode == 'GET.create_event' )
 elseif ( $mode == 'GET.create_tileset' )
 {
 	$lang->load_keys('create_tileset');
-
 	if ( !empty($_POST['create_tileset']) && isset($_POST['tileset_name'], $_POST['tileset_tiles_lower'], $_POST['tileset_tiles_upper'], $_POST['tileset_cols']) )
 	{
 		$tileset_name = htmlspecialchars(trim($_POST['tileset_name']));
@@ -1123,7 +1118,7 @@ elseif ( $mode == 'GET.create_tileset' )
 		$key = 0;
 		while ( $key < $config->tileset_tiles_lower || $key < $tileset_tiles_lower )
 		{
-			$lower_tiles_img[$key] = '';
+			$lower_tiles_img[$key] = 'town_0.png';
 			$lower_tiles_value[$key] = 0;
 			$key++;
 		}
@@ -1131,18 +1126,14 @@ elseif ( $mode == 'GET.create_tileset' )
 		$key = 0;
 		while ( $key < $config->tileset_tiles_upper || $key < $tileset_tiles_upper )
 		{
-			$upper_tiles_img[$key] = '';
+			$upper_tiles_img[$key] = 'town_0.png';
 			$upper_tiles_value[$key] = 0;
 			$key++;
 		}
-
-		$result = $db->sql_query('SELECT MAX(id) AS max FROM ' . TILESETS_TABLE);
-		$id = $db->sql_fetchrow($result);
-		$id = $id['max'] + 1;
-
-		$db->sql_query('INSERT INTO ' . TILESETS_TABLE . '(id, name, tiles, cols) VALUES(' . $id . ', \'' . $tileset_name . '\', \'' . quotes(serialize(array(array($lower_tiles_img, $lower_tiles_value), array($upper_tiles_img, $upper_tiles_value)))) . '\', ' . $tileset_cols . ')');
-
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=tileset_editor&tileset_id=' . $id);
+        $tmp = base64_encode(serialize(array(array($lower_tiles_img, $lower_tiles_value), array($upper_tiles_img, $upper_tiles_value))));
+		$db->sql_query('INSERT INTO ' . TILESETS_TABLE . "(`name`, tiles, cols) VALUES( '$tileset_name','$tmp',$tileset_cols)");
+        $id = $db->lastId();
+		header('Location: ' . BASE_URL. 'index.php?mod=admin.map&mode=tileset_editor&tileset_id=' . $id);
 		exit;
 	}
 
@@ -1163,10 +1154,9 @@ elseif ( $mode == 'GET.create_tileset' )
 	$template->pparse('body');
 	$template->pparse('footer');
 }
-elseif ( $mode == 'POST.save_map' ) // sauver carte
+elseif ( $mode == 'POST.save_map' ) // 保存地图
 {
 	$refresh_id = 1;
-
 	if ( !isset($_POST['map_id'], $_POST['tileset_id'], $_POST['old_tileset_id'], $_POST['col_map'], $_POST['map_name'], $_POST['lower_map'], $_POST['upper_map'], $_POST['event_map'], $_POST['map_music']) )
 	{
 		exit;
@@ -1177,11 +1167,11 @@ elseif ( $mode == 'POST.save_map' ) // sauver carte
 	$map_id = intval($_POST['map_id']);
 	$tileset_id = intval($_POST['tileset_id']);
 	$col_map = intval($_POST['col_map']);
-	$map_name = htmlspecialchars(trim(urldecode($_POST['map_name'])));
-	$map_music = trim(urldecode($_POST['map_music']));
-	$lower_map = explode(',', trim($_POST['lower_map']));
-	$upper_map = explode(',', trim($_POST['upper_map']));
-	$event_map = explode(',', trim($_POST['event_map']));
+	$map_name = htmlspecialchars(trim($_POST['map_name']));
+	$map_music = trim($_POST['map_music']);
+    $lower_map = explode(',', trim($_POST['lower_map']));
+    $upper_map = explode(',', trim($_POST['upper_map']));
+    $event_map = explode(',', trim($_POST['event_map']));
 
 	if ( !isset($lower_map[0], $upper_map[0]) )
 	{
@@ -1210,187 +1200,191 @@ elseif ( $mode == 'POST.save_map' ) // sauver carte
 		$map[2][] = $event_value;
 	}
 
-	if ( $config->optimize_maps == 1 )
-	{
-		// get map data
-		$result = $db->sql_query('SELECT m.blocs, t.tiles FROM ' . MAPS_TABLE . ' m, ' . TILESETS_TABLE . ' t WHERE m.id = ' . $map_id . ' AND m.tileset = t.id');
 
-		if ( !$row = $db->sql_fetchrow($result) )
-		{
-			exit;
-		}
+    $tmp = base64_encode(serialize($map));
+	$db->sql_query('UPDATE ' . MAPS_TABLE . " SET name = '$map_name', tileset = '$tileset_id', blocs = '$tmp', music = '$map_music', optimized = '$config->optimize_maps' WHERE id = $map_id");
+//	$db->sql_query('UPDATE ' . USERS_TABLE . ' SET refresh = 1 WHERE id > 1 AND map_id = ' . $map_id);
+    if ( $config->optimize_maps == 1 )
+    {
+        //生成地图图片
+        // get map data
+        $result = $db->sql_query('SELECT tiles FROM ' .TILESETS_TABLE . " WHERE id=$tileset_id");
 
-		$map_tiles = unserialize($row['tiles']);
-		$map_blocs = unserialize($row['blocs']);
-		$map_count_x = count($map_blocs[0][0]);
-		$map_count_y = count($map_blocs[0]);
-		$map_width = $map_count_x * $config->tile_size;
-		$map_height = $map_count_y * $config->tile_size;
+        if ( !$row = $db->sql_fetchrow($result) )
+        {
+            exit;
+        }
 
-		// create lower picture
-		//$picture = imagecreate($map_width, $map_height);
-		//$bg = imagecolorallocate($picture, 0, 0, 0);
-		//imagecolortransparent($picture, $bg);
+        $map_tiles = unserialize(base64_decode($row['tiles']));
+        $map_blocs = $map;
+        unset($map,$tmp);
+        $map_count_x = count($map_blocs[0][0]);
+        $map_count_y = count($map_blocs[0]);
+        $map_width = $map_count_x * $config->tile_size;
+        $map_height = $map_count_y * $config->tile_size;
 
-		$picture = imagecreate($map_width, $map_height);
+        // create lower picture
+        $picture = imagecreate($map_width, $map_height);
+        $background_type = strtolower(substr($map_tiles[0][0][0], -4));
 
-		$background_type = strtolower(substr($map_tiles[0][0][0], -4));
-		$size = getimagesize($config->path . 'images/tiles/' . $map_tiles[0][0][0]);
-		$bg_width = $size[0];
-		$bg_height = $size[1];
+        $size = getimagesize(MFPATH . 'images/tiles/' . $map_tiles[0][0][0]);
+        $bg_width = $size[0];
+        $bg_height = $size[1];
 
-		if ( $background_type == '.png' )
-		{
-			$y = 0;
-			while ( $y < $bg_height )
-			{
-				$x = 0;
-				while ( $x < $bg_height )
-				{
-					imagecopy($picture, imagecreatefrompng($config->path . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
+        if ( $background_type == '.png' )
+        {
+            $y = 0;
+            while ( $y < $bg_height )
+            {
+                $x = 0;
+                while ( $x < $bg_height )
+                {
+                    imagecopy($picture, imagecreatefrompng(MFPATH . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
 
-					$x++;
-				}
-				$y++;
-			}
-		}
-		elseif ( $background_type == '.gif' )
-		{
-			$y = 0;
-			while ( $y < $bg_height )
-			{
-				$x = 0;
-				while ( $x < $bg_height )
-				{
-					imagecopy($picture, imagecreatefromgif($config->path . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
+                    $x++;
+                }
+                $y++;
+            }
+        }
+        elseif ( $background_type == '.gif' )
+        {
+            $y = 0;
+            while ( $y < $bg_height )
+            {
+                $x = 0;
+                while ( $x < $bg_height )
+                {
+                    imagecopy($picture, imagecreatefromgif(MFPATH . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
 
-					$x++;
-				}
-				$y++;
-			}
-		}
-		elseif ( $background_type == '.jpg' || $background_type == '.jpeg' )
-		{
-			$y = 0;
-			while ( $y < $bg_height )
-			{
-				$x = 0;
-				while ( $x < $bg_height )
-				{
-					imagecopy($picture, imagecreatefromjpeg($config->path . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
+                    $x++;
+                }
+                $y++;
+            }
+        }
+        elseif ( $background_type == '.jpg' || $background_type == '.jpeg' )
+        {
+            $y = 0;
+            while ( $y < $bg_height )
+            {
+                $x = 0;
+                while ( $x < $bg_height )
+                {
+                    imagecopy($picture, imagecreatefromjpeg(MFPATH . 'images/tiles/' . $map_tiles[0][0][0]), $x * $bg_width, $y * $bg_height, 0, 0, $bg_width, $bg_height);
 
-					$x++;
-				}
-				$y++;
-			}
-		}
+                    $x++;
+                }
+                $y++;
+            }
+        }
 
-		$y = 0;
-		while ( $y < $map_count_y )
-		{
-			$x = 0;
-			while ( $x < $map_count_x )
-			{
-				// lower layer
-				if ( $map_blocs[0][$y][$x] != 0 && strtolower(substr($map_tiles[0][0][$map_blocs[0][$y][$x]], -4)) == '.png' ) 
-				{
-					imagecopy($picture, imagecreatefrompng($config->path . 'images/tiles/' . $map_tiles[0][0][$map_blocs[0][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
-				}
+        $y = 0;
+        while ( $y < $map_count_y )
+        {
+            $x = 0;
+            while ( $x < $map_count_x )
+            {
+                // lower layer
+                if ( $map_blocs[0][$y][$x] != 0 && strtolower(substr($map_tiles[0][0][$map_blocs[0][$y][$x]], -4)) == '.png' )
+                {
+                    imagecopy($picture, imagecreatefrompng(MFPATH . 'images/tiles/' . $map_tiles[0][0][$map_blocs[0][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
+                }
+                // upper layer 1
+//                if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[1][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] != 2 )//
+//                {
+//                    $png = imagecreatefrompng(MFPATH . 'images/tiles/' . $map_tiles[1][0][$map_blocs[1][$y][$x]]);
+//                    imagecopy($picture, $png, $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
+//                }
 
-				// upper layer 1
-				if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[0][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] != 2 ) 
-				{
-					imagecopy($picture, imagecreatefrompng($config->path . 'images/tiles/' . $map_tiles[0][0][$map_blocs[1][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
-				}
+                $x++;
+            }
+            $y++;
+        }
 
-				$x++;
-			}
-			$y++;
-		}
+        if ( is_file(MFPATH . $config->cache_dir . 'map_' . $map_id . '_0.png') )
+        {
+            unlink(MFPATH . $config->cache_dir . 'map_' . $map_id . '_0.png');
+        }
 
-		if ( is_file($config->path . $config->cache_dir . 'map_' . $map_id . '_0.png') )
-		{
-			unlink($config->path . $config->cache_dir . 'map_' . $map_id . '_0.png');
-		}
+        imagepng($picture, MFPATH . $config->cache_dir . 'map_' . $map_id . '_0.png');
+        imagedestroy($picture);
 
-		imagepng($picture, $config->path . $config->cache_dir . 'map_' . $map_id . '_0.png');
-		imagedestroy($picture);
+        // create upper picture 1
+        $picture = imagecreate($map_width, $map_height);
+        $bg = imagecolorallocate($picture, 0, 0, 0);
+        imagecolortransparent($picture, $bg);
+        $y = 0;
+        while ( $y < $map_count_y )
+        {
+            $x = 0;
+            while ( $x < $map_count_x )
+            {
+                // upper layer 1
+                if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[1][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] != 2 )
+                {
+                    imagecopy($picture, imagecreatefrompng(MFPATH . 'images/tiles/' . $map_tiles[1][0][$map_blocs[1][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
+                }
 
-		/*// create upper picture 1
-		$picture = imagecreate($map_width, $map_height);
-		$bg = imagecolorallocate($picture, 0, 0, 0);
-		imagecolortransparent($picture, $bg);
+                $x++;
+            }
+            $y++;
+        }
 
-		// upper layer 1
-		$y = 0;
-		while ( $y < $map_count_y )
-		{
-			$x = 0;
-			while ( $x < $map_count_x )
-			{
-				if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[0][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] != 2 ) 
-				{
-					imagecopy($picture, imagecreatefrompng($config->path . 'images/tiles/' . $map_tiles[0][0][$map_blocs[1][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
-				}
+        if ( is_file(MFPATH . $config->cache_dir . 'map_' . $map_id . '_2.png') )
+        {
+            unlink(MFPATH . $config->cache_dir . 'map_' . $map_id . '_2.png');
+        }
 
-				$x++;
-			}
-			$y++;
-		}
+        imagepng($picture, MFPATH . $config->cache_dir . 'map_' . $map_id . '_2.png');
 
-		imagepng($picture, $config->path . $config->cache_dir . 'map_' . $map_id . '_1.png');
-		imagedestroy($picture);*/
+        imagedestroy($picture);
 
-		// create upper picture 2
-		$picture = imagecreate($map_width, $map_height);
-		$bg = imagecolorallocate($picture, 0, 0, 0);
-		imagecolortransparent($picture, $bg);
 
-		// upper layer 2
-		$y = 0;
-		while ( $y < $map_count_y )
-		{
-			$x = 0;
-			while ( $x < $map_count_x )
-			{
-				if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[0][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] == 2 ) 
-				{
-					imagecopy($picture, imagecreatefrompng($config->path . 'images/tiles/' . $map_tiles[0][0][$map_blocs[1][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
-				}
+        // create upper picture 2
+        $picture = imagecreate($map_width, $map_height);
+        $bg = imagecolorallocate($picture, 0, 0, 0);
+        imagecolortransparent($picture, $bg);
 
-				$x++;
-			}
-			$y++;
-		}
+        // upper layer 2（透明层）
+        $y = 0;
+        while ( $y < $map_count_y )
+        {
+            $x = 0;
+            while ( $x < $map_count_x )
+            {
+                if ( $map_blocs[1][$y][$x] != 0 && strtolower(substr($map_tiles[1][0][$map_blocs[1][$y][$x]], -4)) == '.png' && $map_tiles[1][1][$map_blocs[1][$y][$x]] == 2 )
+                {
+                    imagecopy($picture, imagecreatefrompng(MFPATH . 'images/tiles/' . $map_tiles[1][0][$map_blocs[1][$y][$x]]), $x * $config->tile_size, $y * $config->tile_size, 0, 0, $config->tile_size, $config->tile_size);
+                }
 
-		if ( is_file($config->path . $config->cache_dir . 'map_' . $map_id . '_1.png') )
-		{
-			unlink($config->path . $config->cache_dir . 'map_' . $map_id . '_1.png');
-		}
+                $x++;
+            }
+            $y++;
+        }
 
-		imagepng($picture, $config->path . $config->cache_dir . 'map_' . $map_id . '_1.png');
-		imagedestroy($picture);
-	}
+        if ( is_file(MFPATH . $config->cache_dir . 'map_' . $map_id . '_1.png') )
+        {
+            unlink(MFPATH . $config->cache_dir . 'map_' . $map_id . '_1.png');
+        }
 
-	$db->sql_query('UPDATE ' . MAPS_TABLE . ' SET name = \'' . $map_name . '\', tileset = \'' . $tileset_id . '\', blocs = \'' . quotes(serialize($map)) . '\', music = \'' . $map_music . '\', optimized = ' . $config->optimize_maps . ' WHERE id = ' . $map_id);
-	$db->sql_query('UPDATE ' . USERS_TABLE . ' SET refresh = 1 WHERE id > 1 AND map_id = ' . $map_id);
-
+        imagepng($picture, MFPATH . $config->cache_dir . 'map_' . $map_id . '_1.png');
+        imagedestroy($picture);
+    }
 	$lang->load_keys('map_editor');
 	
 	if ( $tileset_id != intval($_POST['old_tileset_id']) )
 	{
-		js_eval('alert(\'' . quotes($lang->map_saved) . '\');document.location.href=\'' . $config->index . '?mod=admin.map&mode=map_editor&map_id=' . $map_id . '\';', $refresh_id, 1);
+		js_eval("alert($lang->map_saved);document.location.href='$config->index?mod=admin.map&mode=map_editor&map_id=$map_id';", $refresh_id, 1);
 	}
 	else
 	{
-		js_eval('alert(\'' . quotes($lang->map_saved) . '\');saved=true;', $refresh_id, 1);
+		js_eval("alert('$lang->map_saved');saved=true;", $refresh_id, 1);
 	}
 }
-elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
+elseif ( $mode == 'GET.map_editor' ) // 编辑地图
 {
 	if ( empty($_GET['map_id']) )
 	{
-		header('Location: ' . $config->path . $config->index . '?mod=admin.map&mode=select_map_to_edit');
+		header('Location: ' . BASE_URL . $config->index . '?mod=admin.map&mode=select_map_to_edit');
 		exit;
 	}
 
@@ -1408,7 +1402,7 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 	$tileset_id = ( isset($_GET['tileset_id']) ) ? intval($_GET['tileset_id']) : 0;
 	$refresh_id = 1;
 
-	$row['tiles'] = unserialize($row['tiles']);
+	$row['tiles'] = unserialize(base64_decode($row['tiles']));
 	$tileset_cols = $row['cols'];
 	
 	$lower_tiles_img = array();
@@ -1420,7 +1414,7 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 
 	while ( isset($row['tiles'][0][0][$i], $row['tiles'][0][1][$i]) )
 	{
-		$lower_tiles_img[] = '\'' . quotes($row['tiles'][0][0][$i]) . '\'';
+		$lower_tiles_img[] = '\''.$row['tiles'][0][0][$i].'\'';
 		$lower_tiles_value[] = $row['tiles'][0][1][$i];
 
 		$i++;
@@ -1430,11 +1424,12 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 
 	while ( isset($row['tiles'][1][0][$i], $row['tiles'][1][1][$i]) )
 	{
-		$upper_tiles_img[] = '\'' . quotes($row['tiles'][1][0][$i]) . '\'';
+		$upper_tiles_img[] = '\''.$row['tiles'][1][0][$i]. '\'';
 		$upper_tiles_value[] = $row['tiles'][1][1][$i];
 
 		$i++;
 	}
+//	var_dump($upper_tiles_img);
 
 	settype($map, 'object');
 
@@ -1443,7 +1438,7 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 	$map->tiles = $row['tiles'];
 	$map->tileset = $row['tileset'];
 	$map->music = $row['music'];
-	$map->blocs = unserialize($row['blocs']);
+	$map->blocs = unserialize(base64_decode($row['blocs']));
 	$map->count_x = count($map->blocs[0][0]);
 	$map->count_y = count($map->blocs[0]);
 	$map->width = $map->count_x * $config->tile_size;
@@ -1461,7 +1456,9 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 				'Z_INDEX' => (( $map->tiles[0][1][$map->blocs[0][$y][$x]] == 0 ) ? 1 : 2),
 				'VALUE' => $map->blocs[0][$y][$x]
 				));
-
+            if ($map->blocs[1][$y][$x]===''){
+                continue;
+            }
 			$template->assign_block_vars('upper_bloc', array(
 				'ID' => 'u' . $x . '-' . $y,
 				'LEFT' => $x,
@@ -1494,8 +1491,8 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 		$i++;
 	}
 
-	// �v�nements
-	$result = $db->sql_query('SELECT id, name, picture, pic_width, pic_height, dir FROM ' . EVENTS_TABLE . ' ORDER BY id ASC');
+	// 查询所有事件
+	$result = $db->sql_query('SELECT id, `name`, picture, pic_width, pic_height, dir FROM ' . EVENTS_TABLE . ' ORDER BY id ASC');
 
 	while ( $row = $db->sql_fetchrow($result) )
 	{
@@ -1568,5 +1565,3 @@ elseif ( $mode == 'GET.map_editor' ) // �diteur de carte
 	$template->pparse('body');
 	$template->pparse('footer');
 }
-
-?>

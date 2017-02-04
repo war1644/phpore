@@ -50,7 +50,7 @@ else
 document.getElementById('drag_layer2').style.left = chatbox_state[0] + 'px';
 document.getElementById('drag_layer2').style.top = chatbox_state[1] + 'px';
 
-var debug = true;
+var debug = false;
 
 if ( refresh_method == 0 )
 {
@@ -75,86 +75,29 @@ var actual_music = '';
 
 function refresh_loop(refresh_id)
 {
-	eval('if ( content_to_refresh_' + refresh_id + ' ) { /*if ( refresh_id == 2 ) { alert(content_to_refresh_' + refresh_id + '); }*/ eval(content_to_refresh_' + refresh_id + '); content_to_refresh_' + refresh_id + ' = false; }');
+	eval('if ( content_to_refresh_' + refresh_id + ' ) {  eval(content_to_refresh_' + refresh_id + '); content_to_refresh_' + refresh_id + ' = false; }');
 	setTimeout('refresh_loop(' + refresh_id + ');', 200);
 }
 
-function refresh_action(refresh_id, file_name, refresh_time)
-{
-	if ( refresh_method == 1 )// XMLHttpRequest
-	{
-		var request = false;
+/**
+ * ajax请求
+ */
+function refresh_action(refresh_id, file_name, refresh_time) {
+    var url = str_replace(file_name, '&amp;', '&') + 'refresh_var=' + refresh_var + '&refresh_id=' + refresh_id;
 
-		if ( window.XMLHttpRequest ) // branch for native XMLHttpRequest object
-		{
-			try
-			{
-				request = new XMLHttpRequest();
-			}
-			catch(e)
-			{
-				request = false;
-			}
-		}
-		else if ( window.ActiveXObject ) // branch for IE/Windows ActiveX version
-		{
-			try
-			{
-				request = new ActiveXObject('Msxml2.XMLHTTP');
-			}
-			catch(e)
-			{
-				try
-				{
-					request = new ActiveXObject('Microsoft.XMLHTTP');
-				}
-				catch(e)
-				{
-					request = false;
-				}
-			}
-		}
+    $.get(url,function (res) {
+        if (res) {
+            eval('content_to_refresh_' + refresh_id + ' = res;');
+        }else{
+            battle_session_restart();
+        }
+    });
+    refresh_var++;
 
-		if ( request )
-		{
-			//request.onload = null;
-			//request.onreadystatechange = processReqChange;
-			//alert( + 'refresh_var=' + refresh_var + map_sid + '&refresh_id=' + refresh_id);
-			request.open('GET', str_replace(file_name, '&amp;', '&') + 'refresh_var=' + refresh_var + '&refresh_id=' + refresh_id, true);
-			request.onreadystatechange = function()
-			{
-				if (request.readyState == 4)
-				{
-					if (request.status != 200)
-					{
-						battle_session_restart();
-					}
-					else
-					{
-						eval('content_to_refresh_' + refresh_id + ' = request.responseText;');
-						//document.body.innerHTML = request.responseText;
-						//alert(request.responseText);
-					}
-				}
-			};
-			request.send('');
-			refresh_var++;
-		}
-		else
-		{
-			battle_session_restart();
-		}
-	}
-	else // dnrefresh
-	{
-		document.getElementById('scripttoup' + refresh_id).innerHTML = '<iframe src="' + file_name + 'refresh_var=' + refresh_var + '&amp;refresh_id=' + refresh_id + '' + method_forcing + '"></' + 'iframe>';
-		refresh_var++;
-	}
 
-	if ( refresh_time )
-	{
-		setTimeout('refresh_action(' + refresh_id + ', \'' + file_name + '\', ' + refresh_time + ')', refresh_time);
-	}
+    if ( refresh_time ) {
+        setTimeout('refresh_action(' + refresh_id + ', \'' + file_name + '\', ' + refresh_time + ')', refresh_time);
+    }
 }
 
 function win_battle(gain_exp, gain_points, level_up)
@@ -175,6 +118,12 @@ function battle_session_stop()
 {
 	stopped_battle = true;
 	document.location.href = u_index + '?mod=battle&mode=stop';
+}
+
+function battle_session_restart()
+{
+    stopped_battle = true;
+    document.location.href = u_index + '?mod=battle';
 }
 
 function battle_session_refresh()
@@ -212,13 +161,13 @@ function refresh_process()
 			{
 				var chat_pos = '';
 			}
-			refresh_action(1, u_index + '?mod=battle&amp;mode=refresh&amp;allies=' + allies_in_battle.join('') + '&amp;opponents=' + opponents_in_battle.join('') + '&amp;chatbox=' + chatcontent + '&amp;chat_last=' + chat_last_id + '&amp;' + chat_pos + 'mid=' + message_id + '&amp;');	
+			refresh_action(1, u_index + '?mod=battle&amp;mode=refresh&amp;allies=' + allies_in_battle.join(',') + '&amp;opponents=' + opponents_in_battle.join(',') + '&amp;chatbox=' + chatcontent + '&amp;chat_last=' + chat_last_id + '&amp;' + chat_pos + 'mid=' + message_id + '&amp;');
 		}
 		else
 		{
 			if ( debug )
 			{
-				alert('connexion failed !');
+				alert('连接失败!');
 			}
 			battle_session_stop();
 		}
@@ -226,9 +175,10 @@ function refresh_process()
 	setTimeout('refresh_process();', 5000);
 }
 
+//添加队友到战斗场景
 function add_ally(id, name, picture)
 {
-	allies_in_battle[id] = 'a' + id;
+	allies_in_battle.push(id);
 	ally[id] = new Object();
 
 	if ( document.getElementById('ally_' + id) )
@@ -241,33 +191,38 @@ function add_ally(id, name, picture)
 	}
 }
 
+//添加敌人到战斗场景
 function add_opponent(id, name, picture)
 {
-	opponents_in_battle[id+9999] = 'o' + id;
+	opponents_in_battle.push(id);
 	opponent[id] = new Object();
 
 	if ( document.getElementById('opponent_' + id) )
 	{
-		document.getElementById('opponent_' + id).innerHTML = '<div style="padding:10px"><span style="color:white"><b>' + name + '</b></span><br /><br /><img src="images/battlers/' + picture + '" alt="" /></div>';
+		document.getElementById('opponent_' + id).innerHTML = '<div style="padding:10px"><span style="color:white"><b>' + name + '</b></span><br /><br /><img src="images/monsters/' + picture + '" alt="" /></div>';
 	}
 	else
 	{
-		document.getElementById('opponents').innerHTML += '<div id="opponent_' + id + '" style="display:inline"><div style="padding:10px"><span style="color:white"><b>' + name + '</b></span><br /><br /><a href="#" onclick="battler_click(' + id + ');return false;"><img src="images/battlers/' + picture + '" alt="" border="0" /></a></div></div>';
+		document.getElementById('opponents').innerHTML += '<div id="opponent_' + id + '" style="display:inline"><div style="padding:10px"><span style="color:white"><b>' + name + '</b></span><br /><br /><a href="#" onclick="battler_click(' + id + ');return false;"><img src="images/monsters/' + picture + '" alt="" border="0" /></a></div></div>';
 	}
 }
 
+//从战斗场景移除队友
 function remove_ally(id)
 {
 	document.getElementById('ally_' + id).innerHTML = '';
+	allies_in_battle.pop();
 	allies_in_battle[id] = '';
 }
 
+//从战斗场景移除敌人
 function remove_opponent(id)
 {
 	document.getElementById('opponent_' + id).innerHTML = '';
 	opponents_in_battle[id] = '';
 }
 
+//攻击开始
 function battler_click(id)
 {
 	if ( actual_mode == 1 )
@@ -275,8 +230,10 @@ function battler_click(id)
 		if ( opponent[id] )
 		{
 			actual_mode = 0;
-			document.getElementById('battle_tools').innerHTML = player_waiting;
-			refresh_action(2, u_index + '?mod=battle&amp;mode=action&amp;type=basic1&amp;op_id=' + id + '&amp;');
+            alert(id);
+            document.getElementById('battle_tools').innerHTML = player_waiting;
+			//刷新
+			refresh_action(2, u_index + '?mod=battle&amp;mode=action&amp;type=basic&amp;op_id=' + id + '&amp;');
 			setTimeout('check_timeout(' + timeouts + ');', 5000);
 		}
 		else
@@ -315,12 +272,30 @@ function battle_timeout(time)
 function basic_action()
 {
 	id = parseInt(document.getElementById('basic_action_select').value);
-	
-	if ( id == 1 )
-	{
-		document.getElementById('battle_tools').innerHTML = l_click_to_attack;
-		actual_mode = 1;
+	switch (id){
+        case 1:
+            document.getElementById('battle_tools').innerHTML = l_click_to_attack;
+            actual_mode = 1;
+            break;
+		case 3:
+            //刷新
+            refresh_action(2, u_index + '?mod=battle&mode=action&type=flee&allies=' + allies_in_battle.join(',') + '&opponents=' + opponents_in_battle.join(','));
+            break;
+		case 2:
+            document.getElementById('battle_tools').innerHTML = my_user_name + ' 进行防御';
+			break;
 	}
+}
+
+function tank_action()
+{
+    id = parseInt(document.getElementById('tank_action_select').value);
+
+    if ( id == 1 )
+    {
+        document.getElementById('battle_tools').innerHTML = l_click_to_attack;
+        actual_mode = 1;
+    }
 }
 
 function message_action(message, id)

@@ -22,47 +22,47 @@ if ( !defined('IN_PHPORE') )
 //
 // event script
 //
-class event_script
+class EventScript
 {
 	// constructor
-	function event_script($script = false, $resume_script = false)
-	{
-		global $lang, $user;
+    function __construct($script = false, $resume_script = false)
+    {
+        global $lang, $user;
 
-		if ( $resume_script )
-		{
-			$resume_script = get_object_vars(unserialize($user->event_script));
+        if ( $resume_script )
+        {
+            $resume_script = get_object_vars(unserialize($user->event_script));
 
-			foreach ( $resume_script as $key => $val )
-			{
-				$this->$key = $val;
-			}
+            foreach ( $resume_script as $key => $val )
+            {
+                $this->$key = $val;
+            }
 
-			$this->stop = false;
-		}
-		elseif ( $script )
-		{
-			$this->config = array();
-			$this->event_key = 0;
-			$this->stop = false;
-			$this->vars = array();
-			$this->conditions = array();
-			$this->condition_id = -1;
+            $this->stop = false;
+        }
+        elseif ( $script )
+        {
+            $this->config = array();
+            $this->event_key = 0;
+            $this->stop = false;
+            $this->vars = array();
+            $this->conditions = array();
+            $this->condition_id = -1;
 
-			if ( !is_array($script) )
-			{
-				$this->script = unserialize($script);
-			}
-			else
-			{
-				$this->script = $script;
-			}
-		}
-		else
-		{
-			$this->stop = true;
-		}
-	}
+            if ( !is_array($script) )
+            {
+                $this->script = unserialize(base64_decode($script));
+            }
+            else
+            {
+                $this->script = $script;
+            }
+        }
+        else
+        {
+            $this->stop = true;
+        }
+    }
 
 	function script($exec, $submit)
 	{
@@ -201,46 +201,45 @@ class event_script
 						}
 					}
 
-					// condition type
+					// 条件
 					if ( $args[1] == 0 )
 					{
-						$condition_type = '!='; // not equal
+						$condition_type = '!=';
 						$args[0] = strval($args[0]);
 						$args[3] = strval($args[3]);
 					}
 					elseif ( $args[1] == 1 )
 					{
-						$condition_type = '=='; // equal
+						$condition_type = '==';
 						$args[0] = strval($args[0]);
 						$args[3] = strval($args[3]);
 					}
 					elseif ( $args[1] == 2 )
 					{
-						$condition_type = '<'; // smaller
+						$condition_type = '<';
 						$args[0] = doubleval($args[0]);
 						$args[3] = doubleval($args[3]);
 					}
 					elseif ( $args[1] == 3 )
 					{
-						$condition_type = '>'; // bigger
+						$condition_type = '>';
 						$args[0] = doubleval($args[0]);
 						$args[3] = doubleval($args[3]);
 					}
 					elseif ( $args[1] == 4 )
 					{
-						$condition_type = '<='; // smaller or equal
+						$condition_type = '<=';
 						$args[0] = doubleval($args[0]);
 						$args[3] = doubleval($args[3]);
 					}
 					elseif ( $args[1] == 5 )
 					{
-						$condition_type = '>='; // bigger or equal
+						$condition_type = '>=';
 						$args[0] = doubleval($args[0]);
 						$args[3] = doubleval($args[3]);
 					}
 
 					eval('if ( $args[0] ' . $condition_type . ' $args[3] ) { $bool = true; } else { $bool = false; }');
-
 					if ( $bool ) // condition true
 					{
 						$this->conditions[$this->condition_id] = true;
@@ -261,35 +260,30 @@ class event_script
 		elseif ( $id == 1 ) // show message
 		{
 			// $args[0] => (string) message
+            //消息对齐方式
+            $this->message_align = ( !isset($this->message_align) ) ? 0 : $this->message_align;
+            //消息时间
+            $this->message_time = ( !isset($this->message_time) ) ? false : $this->message_time;
+            //头像
+            $this->message_face = ( !isset($this->message_face) ) ? false : $this->message_face;
+            //头像对齐方式
+            $this->message_face_align = ( !isset($this->message_face_align) ) ? 0 : $this->message_face_align;
 
-			$this->message_align = ( !isset($this->message_align) ) ? 0 : $this->message_align;
-			$this->message_time = ( !isset($this->message_time) ) ? false : $this->message_time;
-			$this->message_face = ( !isset($this->message_face) ) ? false : $this->message_face;
-			$this->message_face_align = ( !isset($this->message_face_align) ) ? 0 : $this->message_face_align;
-
-			while ( preg_match('`\$([A-Za-z0-9_]+)`', $args[0], $matches) )
-			{
-				if ( substr($matches[1], 0, 5) == 'USER_' && isset($user->vars[substr($matches[1], 5)]) )
-				{
-					$args[0] = str_replace('$' . $matches[1], $user->vars[substr($matches[1], 5)], $args[0]);
-				}
-				elseif ( substr($matches[1], 0, 7) == 'COMMON_' && isset($config->vars[substr($matches[1], 7)]) )
-				{
-					$args[0] = str_replace('$' . $matches[1], $config->vars[substr($matches[1], 7)], $args[0]);
-				}
-				elseif ( isset($this->vars[$matches[1]]) )
-				{
-					$args[0] = str_replace('$' . $matches[1], $this->vars[$matches[1]], $args[0]);
-				}
-				else
-				{
-					$args[0] = str_replace('$' . $matches[1], '&#36;' . $matches[1], $args[0]);
-				}
-			}
-
-			return 'show_message(\'' . quotes(htmlspecialchars(str_replace(array("\n", "\r"), '', $args[0]))) . '\', key, script, ' . $this->message_align . ', ' . (( $this->message_time ) ? $this->message_time : 'false') . ', ' . (( $this->message_face ) ? 'Array(\'' . quotes($this->message_face) . '\', ' . $this->message_face_align . ')' : 'false') . ');';
+			while ( preg_match('`\$([A-Za-z0-9_]+)`', $args[0], $matches) ) {
+                if (substr($matches[1], 0, 5) == 'USER_' && isset($user->vars[substr($matches[1], 5)])) {
+                    $args[0] = str_replace('$' . $matches[1], $user->vars[substr($matches[1], 5)], $args[0]);
+                } elseif (substr($matches[1], 0, 7) == 'COMMON_' && isset($config->vars[substr($matches[1], 7)])) {
+                    $args[0] = str_replace('$' . $matches[1], $config->vars[substr($matches[1], 7)], $args[0]);
+                } elseif (isset($this->vars[$matches[1]])) {
+                    $args[0] = str_replace('$' . $matches[1], $this->vars[$matches[1]], $args[0]);
+                } else {
+                    $args[0] = str_replace('$' . $matches[1], '&#36;' . $matches[1], $args[0]);
+                }
+            }
+            $res = 'show_message(\'' . quotes(htmlspecialchars(str_replace(array("\n", "\r"), '', $args[0]))) . '\', key, script, ' . $this->message_align . ', ' . (( $this->message_time ) ? $this->message_time : 'false') . ', ' . (( $this->message_face ) ? 'Array(\'' . quotes($this->message_face) . '\', ' . $this->message_face_align . ')' : 'false') . ');';
+            return $res;
 		}
-		elseif ( $id == 2 ) // set message alignment
+		elseif ( $id == 2 ) // set message 对齐
 		{
 			// $args[0] => (integer) alignment
 
@@ -356,14 +350,18 @@ class event_script
 				$user->set('event_status', $event_status);
 				$user->set('event_script', $this);
 
-				//js_eval('alert("' . $args[1] . '");', 2);
-				
+//				js_eval('alert("' . $args[1] . '");', 2);
+				//消息对齐方式
 				$this->message_align = ( !isset($this->message_align) ) ? 0 : $this->message_align;
+				//消息时间
 				$this->message_time = ( !isset($this->message_time) ) ? false : $this->message_time;
+				//头像
 				$this->message_face = ( !isset($this->message_face) ) ? false : $this->message_face;
+				//头像对齐方式
 				$this->message_face_align = ( !isset($this->message_face_align) ) ? 0 : $this->message_face_align;
 
 				// stop script in this page, to continue it in the page witch receive choice
+                // 停止脚本接收选择
 				$this->stop = true;
 
 				$texts = array();
@@ -379,8 +377,8 @@ class event_script
 		elseif ( $id == 6 ) // input string
 		{
 			// $args[0] => (string) message
-			// $args[1] => (string) var where the input string will be stored
-			// $args[2] => (boolean) input string or number
+			// $args[1] => (string) var 输入的字符串将存储位置
+			// $args[2] => (boolean) 输入的为 string 还是 number
 
 			if ( $submit )
 			{
@@ -396,7 +394,8 @@ class event_script
 				}
 				else
 				{
-					$value = stripslashes($_GET['input_message']);
+
+				    $value = stripslashes($_GET['input_message']);
 				}
 
 				if ( substr($args[1], 0, 5) == 'USER_' ) // global user variable
@@ -660,8 +659,10 @@ class event_script
 			return false;
 		}
 	}
-
-	function compile($content) // transform a script in text format to optimised data ready to be evalued
+    /**
+     * 转换文本格式,优化数据,准备 evalued 中的脚本
+     */
+	function compile($content)
 	{
 		global $lang;
 
@@ -1152,5 +1153,3 @@ class event_script
 		}
 	}
 }
-
-?>

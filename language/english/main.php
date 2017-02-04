@@ -48,7 +48,7 @@ class lang_english extends lang_french
 		
 		$loaded_from_parent = parent::load_keys($cat, $force_reload);
 
-		if ( $cat == 'common' ) // clés de langue communes
+		if ( $cat == 'common' ) // clï¿½s de langue communes
 		{
 			$this->validate = 'Submit';
 			$this->connection = 'Connection';
@@ -96,7 +96,7 @@ class lang_english extends lang_french
 		elseif ( $cat == 'chat' )
 		{
 			// Who is slash command [Nuladion]
-			$this->whois_char_not_found = 'Character not found!';
+			$this->whois_char_not_found = 'æœªçŸ¥chat!';
 		}
 		elseif ( $cat == 'default' )
 		{
@@ -141,7 +141,7 @@ class lang_english extends lang_french
 			$this->post_message = 'Post a message';
 			$this->flood_alert = 'Please do not flood!';
 		}
-		elseif ( $cat == 'general_config' ) // configuration générale
+		elseif ( $cat == 'general_config' ) // configuration gï¿½nï¿½rale
 		{
 			$this->general_config = 'General configuration';
 			$this->config_updated = 'Configuration updated';
@@ -169,8 +169,8 @@ class lang_english extends lang_french
 			$this->refresh_iframe = 'By iframe';
 			$this->refresh_ajax = 'By ajax';
 			$this->chat_history = 'Nombre de messages dans l\'historique du chat';
-			$this->chat_history_time = 'Durée de vie d\'un message avant qu\'il ne soit supprimé';
-			$this->default_location = 'Position de départ des personnages (ID,X,Y dir)';
+			$this->chat_history_time = 'Durï¿½e de vie d\'un message avant qu\'il ne soit supprimï¿½';
+			$this->default_location = 'Position de dï¿½part des personnages (ID,X,Y dir)';
 			$this->variables = 'Variables';
 		}
 		elseif ( $cat == 'admin' ) // panneau d'administration
@@ -196,7 +196,7 @@ class lang_english extends lang_french
 			$this->delete_map = 'Delete map';
 			$this->delete_event = 'Delete event';
 		}
-		elseif ( $cat == 'map_editor' ) // éditeur de carte
+		elseif ( $cat == 'map_editor' ) // ï¿½diteur de carte
 		{
 			$this->map_editor = 'Map editor';
 			$this->map_tileset = 'Map tileset';
@@ -220,22 +220,22 @@ class lang_english extends lang_french
 			$this->width_tiles_paste = 'Number of tiles to paste in width';
 			$this->height_tiles_paste = 'Number of tiles to paste in height';
 		}
-		elseif ( $cat == 'select_map_to_edit' ) // sélection de la carte à éditer
+		elseif ( $cat == 'select_map_to_edit' ) // sï¿½lection de la carte ï¿½ ï¿½diter
 		{
 			$this->edit_map = 'Edit a map';
 			$this->select_map_to_edit = 'Select a map to edit';
 		}
-		elseif ( $cat == 'select_event_to_edit' ) // sélection de l'événement à éditer
+		elseif ( $cat == 'select_event_to_edit' ) // sï¿½lection de l'ï¿½vï¿½nement ï¿½ ï¿½diter
 		{
 			$this->edit_event = 'Edit an event';
 			$this->select_event_to_edit = 'Select an event to edit';
 		}
-		elseif ( $cat == 'select_tileset_to_edit' ) // sélection du tileset à éditer
+		elseif ( $cat == 'select_tileset_to_edit' ) // sï¿½lection du tileset ï¿½ ï¿½diter
 		{
 			$this->edit_tileset = 'Edit tileset';
 			$this->select_tileset_to_edit = 'Select a tileset to edit';
 		}
-		elseif ( $cat == 'select_tileset_to_export' ) // sélection du tileset à exporter
+		elseif ( $cat == 'select_tileset_to_export' ) // sï¿½lection du tileset ï¿½ exporter
 		{
 			$this->edit_tileset = 'Export a tileset';
 			$this->select_tileset_to_export = 'Select a tileset to export';
@@ -264,14 +264,14 @@ class lang_english extends lang_french
 			$this->not_delete_tileset = 'Cannot delete';
 			$this->this_is_last_tileset = 'This tileset is the only one available. You can\'t delete it because PHPore requires at least one tileset to work.';
 		}
-		elseif ( $cat == 'delete_event' ) // effacer événement
+		elseif ( $cat == 'delete_event' ) // effacer ï¿½vï¿½nement
 		{
 			$this->delete_event = 'Delete an event';
 			$this->select_event_to_delete = 'Select an event to delete';
 			$this->are_you_sure_to_delete_event = 'This event will be removed from the database. This cannot be undone!. Are you sure you want to continue?';
 			$this->event_deleted = 'Event deleted';
 		}
-		elseif ( $cat == 'create_map' ) // créer carte
+		elseif ( $cat == 'create_map' ) // crï¿½er carte
 		{
 			$this->create_map = 'Create a map';
 			$this->map_name = 'Map name';
@@ -279,19 +279,19 @@ class lang_english extends lang_french
 			$this->map_width = 'Map width';
 			$this->map_height = 'Map height';
 		}
-		elseif ( $cat == 'create_event' ) // créer événement
+		elseif ( $cat == 'create_event' ) // crï¿½er ï¿½vï¿½nement
 		{
 			$this->create_event = 'Create an event';
 			$this->event_name = 'Event name';
 		}
-		elseif ( $cat == 'create_tileset' ) // créer tileset
+		elseif ( $cat == 'create_tileset' ) // crï¿½er tileset
 		{
 			$this->create_tileset = 'Create a tileset';
 			$this->tileset_name = 'Name of the tileset';
 			$this->tileset_tiles_lower = 'Number of tiles in lower layer';
 			$this->tileset_tiles_upper = 'Number of tiles in upper layer';
 		}
-		elseif ( $cat == 'tileset_editor' ) // éditeur de tileset
+		elseif ( $cat == 'tileset_editor' ) // ï¿½diteur de tileset
 		{
 			$this->tileset_editor = 'Tileset editor';
 			$this->tileset_properties = 'Tileset properties';
@@ -311,7 +311,7 @@ class lang_english extends lang_french
 			$this->layer_same = 'Stops the character';
 			$this->layer_above = 'Above the character';
 		}
-		elseif ( $cat == 'event_editor' ) // éditeur d'événement
+		elseif ( $cat == 'event_editor' ) // ï¿½diteur d'ï¿½vï¿½nement
 		{
 			$this->event_editor = 'Event editor';
 			$this->save_event = 'Save event';

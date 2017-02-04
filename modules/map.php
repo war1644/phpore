@@ -34,11 +34,11 @@ if ( $mode == 'GET.stop' )
 
 elseif ( $mode == 'GET.disp' )
 {
-	require($config->path . 'includes/functions_map.' . $config->phpex);
+    require($config->path . 'includes/functions_map.' . $config->phpex);
 
 	$serialized_script = serialize(array());
 
-	$event_script = new event_script($serialized_script);
+	$event_script = new EventScript($serialized_script);
 
 	$text = '';
 	$script = '';
@@ -74,7 +74,7 @@ elseif ( $mode == 'GET.disp' )
 }
 elseif ( $mode == 'GET.submit' )
 {
-	require($config->path . 'includes/functions_map.' . $config->phpex);
+    require(INC.'functions_map.php');
 
 	$refresh_id = 2;
 
@@ -90,7 +90,8 @@ elseif ( $mode == 'GET.submit' )
 
 	$javascript = '';
 
-	$event_script = new event_script(false, true);
+	$event_script = new EventScript(false, true);
+
 	$event_key = $event_script->event_key;
 	$script = array();
 
@@ -112,11 +113,11 @@ elseif ( $mode == 'GET.submit' )
 
 	$javascript .= 'script_eval(' . $event_key . ', new Array(' . implode(', ', $script) . '));';
 
-	js_eval($javascript, $refresh_id);
+    js_eval($javascript, $refresh_id);
 }
 elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 {
-	require($config->path . 'includes/functions_map.' . $config->phpex);
+	require(INC . 'functions_map.php');
 
 	$result = $db->sql_query('SELECT m.id, m.name, m.blocs, t.tiles FROM ' . MAPS_TABLE . ' m, ' . TILESETS_TABLE . ' t WHERE m.id = ' . $user->map_id . ' AND m.tileset = t.id');
 
@@ -139,8 +140,8 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 		$refresh_id = 2;
 	}
 
-	$map->tiles = unserialize($map->tiles);
-	$map->blocs = unserialize($map->blocs);
+	$map->tiles = unserialize(base64_decode($map->tiles));
+	$map->blocs = unserialize(base64_decode($map->blocs));
 	$map->count_x = count($map->blocs[0][0]);
 	$map->count_y = count($map->blocs[0]);
 	$map->width = $map->count_x * $config->tile_size;
@@ -193,7 +194,7 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 
 	$javascript = '';
 
-	if ( isset($_GET['chatbox']) && trim($_GET['chatbox']) != '' ) // submit chat messages
+	if ( isset($_GET['chatbox']) && trim($_GET['chatbox']) != '' ) // 聊天信息
 	{
 		$chatbox_content = explode(',', trim($_GET['chatbox']));
 		$lang->load_keys('chat');
@@ -204,10 +205,9 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 			// Who is slash command [Nuladion]
 			if ( substr($chatbox_content[$i], 0, 5) == '/who ' )
 			{
-				$whois = new user('u.name = \'' . quotes(htmlspecialchars(substr($chatbox_content[$i], 5))) . '\'');
+				$whois = new User('u.name = \'' . quotes(htmlspecialchars(substr($chatbox_content[$i], 5))) . '\'');
 
-				if ( $whois->guest )
-				{
+				if ( $whois->guest ) {
 					$javascript .= 'chat_add(\'' . quotes(htmlspecialchars(substr($chatbox_content[$i], 5))) . '\', \'' . quotes($lang->whois_char_not_found) . '\', true);';
 				}
 				else
@@ -217,7 +217,7 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 			}
 			elseif ( trim($chatbox_content[$i]) != '' )
 			{
-				$db->sql_query('INSERT INTO ' . CHATBOX_TABLE . '(cat_id, user_id, time, message) VALUES(\'m' . $user->map_id . '\', ' . $user->id . ', ' . $config->server_time . ', \'' . addslashes(htmlspecialchars(stripslashes(trim($chatbox_content[$i])))) . '\')');
+                $db->sql_query('INSERT INTO ' . CHATBOX_TABLE . '(cat_id, user_id, time, message) VALUES(\'m' . $user->map_id . '\', ' . $user->id . ', ' . $config->server_time . ', \'' . addslashes(htmlspecialchars(stripslashes(trim($chatbox_content[$i])))) . '\')');
 			}
 			$i++;
 		}
@@ -401,30 +401,33 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 
 		if ( count($players_sql) > 0 )
 		{
-			$players_sql = ' OR ( ( u.map_previous_id = ' . $user->map_id . ' OR u.map_id = ' . $user->map_id . ' ) AND ( u.id = ' . implode(' OR u.id = ', $players_sql) . ' ) )';
+			$players_sql = ' OR ( ( map_previous_id = ' . $user->map_id . ' OR map_id = ' . $user->map_id . ' ) AND ( id = ' . implode(' OR id = ', $players_sql) . ' ) )';
 		}
 		else
 		{
 			$players_sql = '';
 		}
+$time = time()-30;
+        $sql = 'SELECT * FROM '. USERS_TABLE ." WHERE id != $user->id and (map_last_visit > ($config->server_time - 30) and map_id = $user->map_id AND teleport = 0) $players_sql";
+        $rs = $db->sql_query($sql,1);
+        $rows = $db->sql_fetchrows($rs);
 
-		//js_eval('alert(\'' . quotes('SELECT u.name, u.id, u.map_left, u.map_id, u.map_top, u.map_dir, u.map_moves, u.map_moves_table, u.charaset, c.class_charaset FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.id != ' . $user->id . ' AND ( u.map_id = ' . $user->map_id . ' OR ( u.map_previous_id = ' . $user->map_id . ' AND ( u.id = ' . implode(' OR u.id = ', $players_sql) . ' ) ) ) AND c.classname = u.classname') . '\');', 1);
-
-		$result = $db->sql_query('SELECT u.name, u.id, u.map_last_visit, u.map_left, u.map_id, u.map_top, u.map_dir, u.map_moves, u.map_moves_table, u.charaset, u.pic_width, u.pic_height, u.battle_id, u.battle_state, c.charaset AS class_charaset, c.pic_width AS class_pic_width, c.pic_height AS class_pic_height FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.id != ' . $user->id . ' AND ( ( u.map_last_visit > ' . ($config->server_time - 16) . ' AND u.map_id = ' . $user->map_id . ' AND u.teleport = 0 )' . $players_sql . ' ) AND c.classname = u.classname');
+//		$result = $db->sql_query('SELECT u.name, u.id, u.map_last_visit, u.map_left, u.map_id, u.map_top, u.map_dir, u.map_moves, u.map_moves_table, u.charaset, u.pic_width, u.pic_height, u.battle_id, u.battle_state, c.charaset AS class_charaset, c.pic_width AS class_pic_width, c.pic_height AS class_pic_height FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.id != ' . $user->id . ' AND ( ( u.map_last_visit > ' . ($config->server_time - 16) . ' AND u.map_id = ' . $user->map_id . ' AND u.teleport = 0 )' . $players_sql . ' ) AND c.classname = u.classname');
 
 		//echo 'SELECT u.name, u.id, u.last_visit, u.map_left, u.map_id, u.map_top, u.map_dir, u.map_moves, u.map_moves_table, u.charaset, u.pic_width, u.pic_height, c.charaset AS class_charaset, c.pic_width AS class_pic_width, c.pic_height AS class_pic_height FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.id != ' . $user->id . ' AND ( ( u.last_visit > ' . ($config->server_time - 16) . ' AND u.map_id = ' . $user->map_id . ' )' . $players_sql . ' ) AND c.classname = u.classname';
 
-		while ( $row = $db->sql_fetchrow($result) )
+//		while ( $row = $db->sql_fetchrow($result) )
+        foreach ($rows as $row)
 		{
 			// this is a new player, add it
 			if ( !isset($players[$row['id']]) )
 			{
-				if ( empty($row['charaset']) )
-				{
-					$row['charaset'] = $row['class_charaset'];
-					$row['pic_width'] = $row['class_pic_width'];
-					$row['pic_height'] = $row['class_pic_height'];
-				}
+//				if ( empty($row['charaset']) )
+//				{
+//					$row['charaset'] = $row['class_charaset'];
+//					$row['pic_width'] = $row['class_pic_width'];
+//					$row['pic_height'] = $row['class_pic_height'];
+//				}
 
 				$javascript .= 'add_player(' . $row['id'] . ', \'' . quotes($row['name']) . '\', \'' . quotes($row['charaset']) . '\', ' . $row['map_left'] . ', ' . $row['map_top'] . ', ' . $row['map_dir'] . ', ' . $row['map_moves'] . ', ' . ceil($row['pic_width'] / 4) . ', ' . ceil($row['pic_height'] / 4) . ');';
 				$javascript .= 'setTimeout(\'' . quotes('chat_add(player[' . $row['id'] . '].name, \'' . quotes($lang->join_map) . '\', true);') . '\', 1000);';
@@ -432,7 +435,7 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 			}
 			else // the player exists, check if he has moved
 			{
-				if ( $row['map_last_visit'] < ($config->server_time - 15) )
+				if ( $row['map_last_visit'] < ($config->server_time - 30) )
 				{
 					$javascript .= 'chat_add(player[' . $row['id'] . '].name, \'' . quotes($lang->quit_map) . '\', true);';
 					$javascript .= 'remove_player(' . $row['id'] . ');';
@@ -467,14 +470,14 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 		$javascript = 'map_session_refresh();' . $javascript;
 		js_eval($javascript, $refresh_id);
 	}
-	else // exec event
+	else //执行事件
 	{
 		$layer = $_GET['layer'];
 		$event_pos = $event_pos[1];
 
 		if ( ( $layer == 1 && isset($events['i' . $event_pos]) && ( $event_pos == $user->map_left . '-' . ($user->map_top + 1) || $event_pos == ($user->map_left - 1) . '-' . $user->map_top || $event_pos == $user->map_left . '-' . ($user->map_top - 1) || $event_pos == ($user->map_left + 1) . '-' . $user->map_top ) ) || ( $layer == 0 && isset($events['i' . $event_pos]) && $event_pos == $user->map_left . '-' . $user->map_top ) )
 		{
-			$event_script = new event_script($event_script_data['i' . $event_pos]);
+			$event_script = new EventScript($event_script_data['i' . $event_pos]);
 			$script = array();
 
 			while ( $data = $event_script->script(true, false) )
@@ -489,61 +492,51 @@ elseif ( $mode == 'GET.refresh' || $mode == 'GET.event')
 		js_eval($javascript, $refresh_id);
 	}
 
-}
-else
-{
-	if ( $user->in_battle )
-	{
+} else {
+    if ( $user->in_battle ) {
 		header('Location: ' . $config->path . $config->index . '?mod=battle');
-		exit;
+		exit();
 	}
 
-	if ( $user->refresh == 1 )
-	{
-		$user->set('refresh', 0);
-	}
+	if ( $user->refresh == 1 ) {
+        $user->set('refresh', 0);
+    }
 
-	if ( $user->teleport == 1 )
-	{
-		$user->set('teleport', 0);
-	} 
+	if ( $user->teleport == 1 ) {
+        $user->set('teleport', 0);
+    }
 
 	// get map data
 	$result = $db->sql_query('SELECT m.id, m.name, m.blocs, m.music, m.optimized, t.tiles FROM ' . MAPS_TABLE . ' m, ' . TILESETS_TABLE . ' t WHERE m.id = ' . $user->map_id . ' AND m.tileset = t.id');
 
-	if ( !$map = $db->sql_fetchobject($result) )
-	{
-		if ( $user->start_location != '' )
-		{
-			list($user->map_id, $user->map_left, $user->map_top, $user->map_dir) = explode(',', $user->start_location);
-		}
-		else
-		{
-			list($user->map_id, $user->map_left, $user->map_top, $user->map_dir) = explode(',', $config->default_location);
-		}
+	if ( !$map = $db->sql_fetchobject($result) ) {
+	    //设置玩家在地图的位置
+        if ($user->start_location != '') {
+            list($user->map_id, $user->map_left, $user->map_top, $user->map_dir) = explode(',', $user->start_location);
+        } else {
+            list($user->map_id, $user->map_left, $user->map_top, $user->map_dir) = explode(',', $config->default_location);
+        }
 
-		$user->map_id = intval($user->map_id);
-		$user->map_left = intval($user->map_left);
-		$user->map_top = intval($user->map_top);
-		$user->map_dir = intval($user->map_dir);
+        $user->map_id = intval($user->map_id);
+        $user->map_left = intval($user->map_left);
+        $user->map_top = intval($user->map_top);
+        $user->map_dir = intval($user->map_dir);
 
-		$user->set('map_id', $user->map_id);
-		$user->set('map_left', $user->map_left);
-		$user->set('map_top', $user->map_top);
-		$user->set('map_dir', $user->map_dir);
+        $user->set('map_id', $user->map_id);
+        $user->set('map_left', $user->map_left);
+        $user->set('map_top', $user->map_top);
+        $user->set('map_dir', $user->map_dir);
 
-		$user->update_db();
-		$config->update_db();
+        $user->update_db();
+        $config->update_db();
 
-		if ( !isset($_GET['redirect_header']) )
-		{
-			header('Location: ' . $config->path . $config->index . '?mod=map&redirect_header=1');
-		}
-		exit;
-	}
-
-	$map->tiles = unserialize($map->tiles);
-	$map->blocs = unserialize($map->blocs);
+        if (!isset($_GET['redirect_header'])) {
+            header('Location: ' . $config->path . $config->index . '?mod=map&redirect_header=1');
+        }
+        exit;
+    }
+	$map->tiles = unserialize(base64_decode($map->tiles));
+	$map->blocs = unserialize(base64_decode($map->blocs));
 	$map->count_x = count($map->blocs[0][0]);
 	$map->count_y = count($map->blocs[0]);
 	$map->width = $map->count_x * $config->tile_size;
@@ -552,42 +545,45 @@ else
 
 	$user->set('map_sid', $user->map_sid + 1);
 
-	if ( $map->optimized )
-	{
-		$template->assign_block_vars('map_image', array(
-			'PICTURE' => $config->cache_dir . 'map_' . $map->id . '_0.png',
-			'Z_INDEX' => 1
-			));
+	if ( $map->optimized ) {
+        $template->assign_block_vars('map_image', array(
+            'PICTURE' => $config->cache_dir . 'map_' . $map->id . '_0.png',
+            'Z_INDEX' => 1
+        ));
+        $template->assign_block_vars('map_image', array(
+            'PICTURE' => $config->cache_dir . 'map_' . $map->id . '_2.png',
+            'Z_INDEX' => 2
+        ));
 
-		$template->assign_block_vars('map_image', array(
-			'PICTURE' => $config->cache_dir . 'map_' . $map->id . '_1.png',
-			'Z_INDEX' => 9995
-			));
-	}
+        $template->assign_block_vars('map_image', array(
+            'PICTURE' => $config->cache_dir . 'map_' . $map->id . '_1.png',
+            'Z_INDEX' => 9995
+        ));
+    }
 
-	for ( $x = 0; $x < $map->count_x; $x++ )
-	{
-		for ( $y = 0; $y < $map->count_y; $y++ )
-		{
-			// lower layer of map
-			$template->assign_block_vars('lower_bloc', array(
-				'ID' => 'l' . $x . '-' . $y,
-				'LEFT' => $x,
-				'TOP' => $y,
-				'BACKGROUND_IMAGE' => (( $map->blocs[0][$y][$x] == 0 || ( $map->optimized && strtolower(substr($map->tiles[0][0][$map->blocs[0][$y][$x]], -4)) == '.png' ) ) ? '' : $map->tiles[0][0][$map->blocs[0][$y][$x]]),
-				'Z_INDEX' => (( $map->tiles[0][1][$map->blocs[0][$y][$x]] == 0 ) ? 1 : 2)
-				));
-
-			// upper layer of map
-			$template->assign_block_vars('upper_bloc', array(
-				'ID' => 'u' . $x . '-' . $y,
-				'LEFT' => $x,
-				'TOP' => $y,
-				'BACKGROUND_IMAGE' => (( $map->blocs[1][$y][$x] == 0 || ( $map->optimized && strtolower(substr($map->tiles[1][0][$map->blocs[1][$y][$x]], -4)) == '.png' ) ) ? '' : $map->tiles[1][0][$map->blocs[1][$y][$x]]),
-				'Z_INDEX' => (( $map->tiles[1][1][$map->blocs[1][$y][$x]] == 0 ) ? 3 : (( $map->tiles[1][1][$map->blocs[1][$y][$x]] == 1 ) ? 6 : 9995))
-				));
-		}
-	}
+	for ( $x = 0; $x < $map->count_x; $x++ ) {
+        for ($y = 0; $y < $map->count_y; $y++) {
+            // 地图下图层
+            $template->assign_block_vars('lower_bloc', array(
+                'ID' => 'l' . $x . '-' . $y,
+                'LEFT' => $x,
+                'TOP' => $y,
+                'BACKGROUND_IMAGE' => (($map->blocs[0][$y][$x] == 0 || ($map->optimized && strtolower(substr($map->tiles[0][0][$map->blocs[0][$y][$x]], -4)) == '.png')) ? '' : $map->tiles[0][0][$map->blocs[0][$y][$x]]),
+                'Z_INDEX' => (($map->tiles[0][1][$map->blocs[0][$y][$x]] == 0) ? 1 : 2)
+            ));
+//            if ($map->blocs[1][$y][$x]===''){
+//                continue;
+//            }
+            // 地图上图层
+            $template->assign_block_vars('upper_bloc', array(
+                'ID' => 'u' . $x . '-' . $y,
+                'LEFT' => $x,
+                'TOP' => $y,
+                'BACKGROUND_IMAGE' => (($map->blocs[1][$y][$x] == 0 || ($map->optimized && strtolower(substr($map->tiles[1][0][$map->blocs[1][$y][$x]], -4)) == '.png')) ? '' : $map->tiles[1][0][$map->blocs[1][$y][$x]]),
+                'Z_INDEX' => (($map->tiles[1][1][$map->blocs[1][$y][$x]] == 0) ? 3 : (($map->tiles[1][1][$map->blocs[1][$y][$x]] == 1) ? 6 : 9995))
+            ));
+        }
+    }
 
 	$template->assign_block_vars('add_player_bloc', array(
 		'ID' => $user->id,
@@ -603,133 +599,113 @@ else
 		'HEIGHT' => ceil($user->pic_height / 4)
 		));
 
-	// characters in map
-	$result = $db->sql_query('SELECT u.name, u.id, u.map_left, u.map_top, u.map_dir, u.map_moves, u.charaset, u.pic_width, u.pic_height, u.battle_id, u.battle_state, c.charaset AS class_charaset, c.pic_width AS class_pic_width, c.pic_height AS class_pic_height FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.map_last_visit > ' . ($config->server_time - 16) . ' AND u.id != ' . $user->id . ' AND u.map_id = ' . $user->map_id . ' AND c.classname = u.classname');
-
-	while ( $row = $db->sql_fetchrow($result) )
-	{
-		if ( empty($row['charaset']) )
-		{
-			$row['charaset'] = $row['class_charaset'];
-			$row['pic_width'] = $row['class_pic_width'];
-			$row['pic_height'] = $row['class_pic_height'];
-		}
-
-		$template->assign_block_vars('add_player_bloc', array(
-			'ID' => $row['id'],
-			'BATTLE_ID' => $row['battle_id'],
-			'BATTLE_STATE' => $row['battle_state'],
-			'NAME' => $row['name'],
-			'CHARASET' => $row['charaset'],
-			'LEFT' => $row['map_left'],
-			'TOP' => $row['map_top'],
-			'DIR' => $row['map_dir'],
-			'MOVES' => $row['map_moves'],
-			'WIDTH' => ceil($row['pic_width'] / 4),
-			'HEIGHT' => ceil($row['pic_height'] / 4)
-			));
-	}
+	// 地图里的精灵图
+//	$result = $db->sql_query('SELECT u.name, u.id, u.map_left, u.map_top, u.map_dir, u.map_moves, u.charaset, u.pic_width, u.pic_height, u.battle_id, u.battle_state, c.charaset AS class_charaset, c.pic_width AS class_pic_width, c.pic_height AS class_pic_height FROM ' . USERS_TABLE . ' u, ' . CLASSES_TABLE . ' c WHERE u.map_last_visit > ' . ($config->server_time - 16) . ' AND u.id != ' . $user->id . ' AND u.map_id = ' . $user->map_id . ' AND c.classname = u.classname');
+    $time = time();
+    $sql = 'SELECT `name`, id, map_left, map_top, map_dir, map_moves, charaset, pic_width, pic_height, battle_id, battle_state FROM '. USERS_TABLE ." WHERE id != $user->id and map_id = $user->map_id and battle_id>0 and map_last_visit > ($config->server_time - 30)";
+    $rs = $db->sql_query($sql,1);
+    $rows = $db->sql_fetchrows($rs);
+    foreach ($rows as $row){
+        $template->assign_block_vars('add_player_bloc', array(
+            'ID' => $row['id'],
+            'BATTLE_ID' => $row['battle_id'],
+            'BATTLE_STATE' => $row['battle_state'],
+            'NAME' => $row['name'],
+            'CHARASET' => $row['charaset'],
+            'LEFT' => $row['map_left'],
+            'TOP' => $row['map_top'],
+            'DIR' => $row['map_dir'],
+            'MOVES' => $row['map_moves'],
+            'WIDTH' => ceil($row['pic_width'] / 4),
+            'HEIGHT' => ceil($row['pic_height'] / 4)
+        ));
+    }
 
 	$event_ids = array();
 	$event_coords = array();
 
 	$i = 0;
-	while ( $i < $map->count_x )
-	{
-		$j = 0;
-		while ( $j < $map->count_y )
-		{
-			if ( $map->blocs[2][$j][$i] > 0 )
-			{
-				$event_ids[] = $map->blocs[2][$j][$i];
-				if ( !isset($event_coords[$map->blocs[2][$j][$i]]) )
-				{
-					$event_coords[$map->blocs[2][$j][$i]] = array();
-				}
-				$event_coords[$map->blocs[2][$j][$i]][] = array($i, $j);
-			}
-			$j++;
-		}
-		$i++;
-	}
+	while ( $i < $map->count_x ) {
+        $j = 0;
+        while ($j < $map->count_y) {
+            if ($map->blocs[2][$j][$i] > 0) {
+                $event_ids[] = $map->blocs[2][$j][$i];
+                if (!isset($event_coords[$map->blocs[2][$j][$i]])) {
+                    $event_coords[$map->blocs[2][$j][$i]] = array();
+                }
+                $event_coords[$map->blocs[2][$j][$i]][] = array($i, $j);
+            }
+            $j++;
+        }
+        $i++;
+    }
 
-	if ( count($event_ids) > 0 )
-	{
-		// events in map
-		$result = $db->sql_query('SELECT * FROM ' . EVENTS_TABLE . ' WHERE id = ' . implode(' OR id = ', $event_ids));
+	if ( count($event_ids) > 0 ) {
+        // events in map
+        $result = $db->sql_query('SELECT * FROM ' . EVENTS_TABLE . ' WHERE id = ' . implode(' OR id = ', $event_ids));
 
-		while ( $row = $db->sql_fetchrow($result) )
-		{
-			if ( $row['dir'] != '' )
-			{
-				$row['pic_width'] = ceil($row['pic_width'] / 4);
-				$row['pic_height'] = ceil($row['pic_height'] / 4);
-			}
+        while ($row = $db->sql_fetchrow($result)) {
+            if ($row['dir'] != '') {
+                $row['pic_width'] = ceil($row['pic_width'] / 4);
+                $row['pic_height'] = ceil($row['pic_height'] / 4);
+            }
 
-			foreach ( $event_coords[$row['id']] as $val )
-			{
-				$template->assign_block_vars('event_bloc', array(
-					'ID' => 'i' . $val[0] . '-' . $val[1],
-					'LEFT' => $val[0],
-					'TOP' => $val[1],
-					'PICTURE' => $row['picture'],
-					'DIR' => (( $row['dir'] == '' ) ? 'false' : 'new Array(' . $row['dir'] . ')'),
-					'LAYER' => $row['layer'],
-					'WIDTH' => $row['pic_width'],
-					'HEIGHT' => $row['pic_height']
-					));
-			}
-		}
-	}
+            foreach ($event_coords[$row['id']] as $val) {
+                $template->assign_block_vars('event_bloc', array(
+                    'ID' => 'i' . $val[0] . '-' . $val[1],
+                    'LEFT' => $val[0],
+                    'TOP' => $val[1],
+                    'PICTURE' => $row['picture'],
+                    'DIR' => (($row['dir'] == '') ? 'false' : 'new Array(' . $row['dir'] . ')'),
+                    'LAYER' => $row['layer'],
+                    'WIDTH' => $row['pic_width'],
+                    'HEIGHT' => $row['pic_height']
+                ));
+            }
+        }
+    }
 
 	if ( $config->chat_history == 0 ) // no chat history
-	{
-		$result = $db->sql_query('SELECT MAX(id) AS last_id FROM ' . CHATBOX_TABLE . ' WHERE cat_id = \'m' . $user->map_id . '\'');
+    {
+        $result = $db->sql_query('SELECT MAX(id) AS last_id FROM ' . CHATBOX_TABLE . ' WHERE cat_id = \'m' . $user->map_id . '\'');
 
-		if ( $last_id = $db->sql_fetchrow($result) )
-		{
-			$last_id = $last_id['last_id'];
-		}
-		
-		if ( empty($last_id) )
-		{
-			$last_id = 0;
-		}
-	}
+        if ($last_id = $db->sql_fetchrow($result)) {
+            $last_id = $last_id['last_id'];
+        }
+
+        if (empty($last_id)) {
+            $last_id = 0;
+        }
+    }
 	else // chat history
-	{
-		$result = $db->sql_query('SELECT u.name, c.message, c.id FROM ' . USERS_TABLE . ' u, ' . CHATBOX_TABLE . ' c WHERE u.id = c.user_id AND c.cat_id = \'m' . $user->map_id . '\' ORDER BY c.id DESC LIMIT 0, ' . $config->chat_history);
+    {
+        $result = $db->sql_query('SELECT u.name, c.message, c.id FROM ' . USERS_TABLE . ' u, ' . CHATBOX_TABLE . ' c WHERE u.id = c.user_id AND c.cat_id = \'m' . $user->map_id . '\' ORDER BY c.id DESC LIMIT 0, ' . $config->chat_history);
 
-		$row = array();
-		while ( $value = $db->sql_fetchrow($result) )
-		{
-			$row[] = $value;
-		}
+        $row = array();
+        while ($value = $db->sql_fetchrow($result)) {
+            $row[] = $value;
+        }
 
-		while( $value = array_pop($row) )
-		{
-			$template->assign_block_vars('add_chat', array(
-				'NAME' => $value['name'],
-				'MESSAGE' => $value['message']
-				));
-			$last_id = $value['id'];
-		}
+        while ($value = array_pop($row)) {
+            $template->assign_block_vars('add_chat', array(
+                'NAME' => $value['name'],
+                'MESSAGE' => $value['message']
+            ));
+            $last_id = $value['id'];
+        }
 
-		if ( !isset($last_id) )
-		{
-			$result = $db->sql_query('SELECT MAX(id) AS last_id FROM ' . CHATBOX_TABLE . ' WHERE cat_id = \'m' . $user->map_id . '\'');
+        if (!isset($last_id)) {
+            $result = $db->sql_query('SELECT MAX(id) AS last_id FROM ' . CHATBOX_TABLE . ' WHERE cat_id = \'m' . $user->map_id . '\'');
 
-			if ( $last_id = $db->sql_fetchrow($result) )
-			{
-				$last_id = $last_id['last_id'];
-			}
-			
-			if ( empty($last_id) )
-			{
-				$last_id = 0;
-			}
-		}
-	}
+            if ($last_id = $db->sql_fetchrow($result)) {
+                $last_id = $last_id['last_id'];
+            }
+
+            if (empty($last_id)) {
+                $last_id = 0;
+            }
+        }
+    }
 
 	/*$template->assign_block_vars('player_bloc', array(
 		'ID' => 'p' . $user->id,
@@ -770,23 +746,19 @@ else
 		'PLAYER_Y' => $user->map_top,
 		'PLAYER_MOVING' => (( $event_status ) ? 'true' : 'false'),
 		'CHATBOX_STATE' => $user->chatbox_state,
-		));
+    ));
 
-	if ( !empty($map->music) && $user->allow_music )
-	{
-		if(strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE'))
-		{
-			$template->assign_block_vars('bgsound_ie', array(
-				'MUSIC' => $map->music
-				));
-		}
-		else
-		{
-			$template->assign_block_vars('bgsound_ns', array(
-				'MUSIC' => $map->music
-				));
-		}
-	}
+	if ( !empty($map->music) && $user->allow_music ) {
+        if (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE')) {
+            $template->assign_block_vars('bgsound_ie', array(
+                'MUSIC' => $map->music
+            ));
+        } else {
+            $template->assign_block_vars('bgsound_ns', array(
+                'MUSIC' => $map->music
+            ));
+        }
+    }
 
 	$config->navigation[] = array('mod=map', 'nav_map');
 
@@ -800,5 +772,3 @@ else
 	$template->pparse('body');
 	$template->pparse('footer');
 }
-
-?>

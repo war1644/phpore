@@ -1,24 +1,5 @@
 <?php
 
-/*
-
-Program: phpore
-Author: Jeremy Faivre
-Contact: http://www.jeremyfaivre.com/about
-Year: 2005
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-*/
-
-if ( !defined('IN_PHPORE') )
-{
-	exit;
-}
-
 $lang->load_keys('profile');
 
 $mode = ( isset($_POST['mode']) ) ? 'POST.' . trim($_POST['mode']) : (( isset($_GET['mode']) ) ? 'GET.' . trim($_GET['mode']) : '' );
@@ -174,8 +155,3 @@ else
 }
 
 
-
-//mail('trucmuche@mail.com', 'héhéhé', 'Bon rien de particulier je teste la fonction mail :p', 'From: webmaster@trucmuche.com' . "\r\n" . 'Reply-To: webmaster@trucmuche.com' . "\r\n" . 'X-Mailer: PHP/' . phpversion());
-
-
-?>

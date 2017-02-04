@@ -132,80 +132,28 @@ function refresh_loop(refresh_id)
 	setTimeout('refresh_loop(' + refresh_id + ');', 200);
 }
 
-function refresh_action(refresh_id, file_name, refresh_time)
-{
-	if ( refresh_method == 1 )// XMLHttpRequest
-	{
-		var request = false;
+/**
+ * ajax请求
+ */
+function refresh_action(refresh_id, file_name, refresh_time) {
+	var url = str_replace(file_name, '&amp;', '&') + 'refresh_var=' + refresh_var + '' + map_sid + '&refresh_id=' + refresh_id;
 
-		if ( window.XMLHttpRequest ) // branch for native XMLHttpRequest object
-		{
-			try
-			{
-				request = new XMLHttpRequest();
-			}
-			catch(e)
-			{
-				request = false;
-			}
+	$.get(url,function (res) {
+        if (res) {
+            eval('content_to_refresh_' + refresh_id + ' = res;');
+        }else{
+            map_session_restart();
 		}
-		else if ( window.ActiveXObject ) // branch for IE/Windows ActiveX version
-		{
-			try
-			{
-				request = new ActiveXObject('Msxml2.XMLHTTP');
-			}
-			catch(e)
-			{
-				try
-				{
-					request = new ActiveXObject('Microsoft.XMLHTTP');
-				}
-				catch(e)
-				{
-					request = false;
-				}
-			}
-		}
+    });
+    refresh_var++;
 
-		if ( request )
-		{
-			request.open('GET', str_replace(file_name, '&amp;', '&') + 'refresh_var=' + refresh_var + '' + map_sid + '&refresh_id=' + refresh_id, true);
-			request.onreadystatechange = function()
-			{
-				if (request.readyState == 4)
-				{
-					if (request.status != 200)
-					{
-						map_session_restart();
-					}
-					else
-					{
-						eval('content_to_refresh_' + refresh_id + ' = request.responseText;');
-						//document.body.innerHTML = request.responseText;
-						//alert(request.responseText);
-					}
-				}
-			};
-			request.send('');
-			refresh_var++;
-		}
-		else
-		{
-			map_session_restart();
-		}
-	}
-	else // dnrefresh
-	{
-		document.getElementById('scripttoup' + refresh_id).innerHTML = '<iframe src="' + file_name + 'refresh_var=' + refresh_var + '' + map_sid + '&amp;refresh_id=' + refresh_id + '' + method_forcing + '"></' + 'iframe>';
-		refresh_var++;
-	}
 
-	if ( refresh_time )
-	{
-		setTimeout('refresh_action(' + refresh_id + ', \'' + file_name + '\', ' + refresh_time + ')', refresh_time);
-	}
+    if ( refresh_time ) {
+        setTimeout('refresh_action(' + refresh_id + ', \'' + file_name + '\', ' + refresh_time + ')', refresh_time);
+    }
 }
+
+
 
 function show_message(message, key, script, align, time, face)
 {
@@ -293,22 +241,27 @@ function show_message(message, key, script, align, time, face)
 	}*/
 }
 
+/**
+ * 提交消息到后台
+ */
 function submit_message(event_status, input_message)
 {
-	refresh_action(2, u_index + '?mod=map&amp;mode=submit&amp;event_status=' + event_status + '&amp;input_message=' + urlencode(input_message) + '&amp;map_sid=' + map_sid + '$amp;x=' + player_x + '&amp;y=' + player_y + '&amp;map_id=' + map_id + '&amp;');
-	//document.getElementById('test_updater').innerHTML = 'http://localhost/phpore/index.php?mod=map&amp;mode=submit_message&amp;event_status=' + event_status + '&amp;input_message=' + urlencode(input_message) + '&amp;varname=' + varname + '&amp;map_sid=' + map_sid + '$amp;';
+    refresh_action(2, u_index + '?mod=map&amp;mode=submit&amp;event_status=' + event_status + '&amp;input_message=' + input_message + '&amp;map_sid=' + map_sid + '$amp;x=' + player_x + '&amp;y=' + player_y + '&amp;map_id=' + map_id + '&amp;');
+
 }
 
 function continue_event(event_status)
 {
 	refresh_action(2, u_index + '?mod=map&amp;mode=submit&amp;event_status=' + event_status + '&amp;map_sid=' + map_sid + '$amp;x=' + player_x + '&amp;y=' + player_y + '&amp;map_id=' + map_id + '&amp;');
-	//document.getElementById('test_updater').innerHTML = 'http://localhost/phpore/index.php?mod=map&amp;mode=submit_message&amp;event_status=' + event_status + '&amp;input_message=' + urlencode(input_message) + '&amp;varname=' + varname + '&amp;map_sid=' + map_sid + '$amp;';
+
 }
 
+/**
+ * 提交玩家选项到后台
+ */
 function submit_choice(event_status, input_choice)
 {
 	refresh_action(2, u_index + '?mod=map&amp;mode=submit&amp;event_status=' + event_status + '&amp;input_choice=' + input_choice + '&amp;map_sid=' + map_sid + '$amp;x=' + player_x + '&amp;y=' + player_y + '&amp;map_id=' + map_id + '&amp;');
-	//document.getElementById('test_updater').innerHTML = 'http://localhost/phpore/index.php?mod=map&amp;mode=submit_message&amp;event_status=' + event_status + '&amp;input_message=' + urlencode(input_message) + '&amp;varname=' + varname + '&amp;map_sid=' + map_sid + '$amp;';
 }
 
 function select_choice(event_status, align, face, choices)
@@ -376,7 +329,6 @@ function select_choice(event_status, align, face, choices)
 function input_string(message, event_status, align, face, number)
 {
 	message = htmlspecialchars_decode(message);
-
 	if ( align < 1 || align > 3 )
 	{
 		align = 'left';
@@ -568,9 +520,10 @@ function add_player(id, name, charaset, left, top, dir, moves, width, height)
 	left = left * tile_size - player[id].left_gain;
 	top = top * tile_size - player[id].top_gain;
 
+    var playerImg = "'images/charasets/" + charaset + "'";
 	if ( document.getElementById('p' + id) )
 	{
-		document.getElementById('p' + id).innerHTML = '<div class="playersprite" style="width:' + width + 'px;height:' + height + 'px"><div class="playercharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url(images/charasets/' + charaset + ');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div><div class="playername" id="name_' + id + '">' + name + '</div><div class="playerspacer"></div>';
+		document.getElementById('p' + id).innerHTML = '<div class="playersprite" style="width:' + width + 'px;height:' + height + 'px"><div class="playercharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url('+ playerImg +');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div><div class="playername" id="name_' + id + '" style="width:30px;">' + name + '</div><div class="playerspacer"></div>';
 		document.getElementById('p' + id).style.left = left + 'px';
 		document.getElementById('p' + id).style.top = top + 'px';
 		//document.getElementById('p' + id).style.backgroundImage = 'url(images/sprites/' + charaset + '_' + pic + '.png)';
@@ -578,7 +531,7 @@ function add_player(id, name, charaset, left, top, dir, moves, width, height)
 	}
 	else
 	{
-		document.getElementById('player_bloc').innerHTML = '<div class="playermain" id="p' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="playersprite" style="width:' + width + 'px;height:' + height + 'px"><div class="playercharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url(images/charasets/' + charaset + ');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div><div class="playername" id="name_' + id + '">' + name + '</div><div class="playerspacer"></div></div>' + document.getElementById('player_bloc').innerHTML;
+		document.getElementById('player_bloc').innerHTML = '<div class="playermain" id="p' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="playersprite" style="width:' + width + 'px;height:' + height + 'px"><div class="playercharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url('+ playerImg +');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div><div class="playername" id="name_' + id + '" style="width:30px;">' + name + '</div><div class="playerspacer"></div></div>' + document.getElementById('player_bloc').innerHTML;
 	}
 	//alert('<div id="p' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="playersprite" style="width:' + width + 'px;height:' + height + 'px"><div class="playercharaset" id="charaset_' + id + '" style="background-image:url(images/charasets/' + charaset + '.png);width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div><div class="playername">' + name + '</div></div>');
 }
@@ -604,9 +557,10 @@ function add_event(id, left, top, layer, width, height, picture, dir)
 	left = left * tile_size - event_data[id].left_gain;
 	top = top * tile_size - event_data[id].top_gain;
 
-	if ( !dir )
+    if ( !dir )
 	{
-		document.getElementById('event_bloc').innerHTML += '<div id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;background-image:url(images/sprites/' + picture + ');width:' + width + 'px;height:' + height + 'px;z-index:' + z_index + '"></div>';
+        var tmp = "'images/sprites/" + picture + "'";
+		document.getElementById('event_bloc').innerHTML += '<div id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;background-image:url('+tmp+');width:' + width + 'px;height:' + height + 'px;z-index:' + z_index + '"></div>';
 		event_data[id].changedir = false;
 	}
 	else
@@ -624,8 +578,9 @@ function add_event(id, left, top, layer, width, height, picture, dir)
 		}
 
 		//alert('<div class="playermain" id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="eventsprite" style="width:' + width + 'px;height:' + height + 'px"><div class="eventcharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url(images/charasets/' + picture + '.png);width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div></div>');
+        var playerImg = "'images/charasets/" + picture + "'";
 
-		document.getElementById('player_bloc').innerHTML += '<div class="playermain" id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="eventsprite" style="width:' + width + 'px;height:' + height + 'px"><div class="eventcharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url(images/charasets/' + picture + ');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div></div>';
+        document.getElementById('player_bloc').innerHTML += '<div class="playermain" id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;z-index:' + z_index + '"><div class="eventsprite" style="width:' + width + 'px;height:' + height + 'px"><div class="eventcharaset" id="charaset_' + id + '" style="left:' + dir_left + 'px;top:' + dir_top + 'px;background-image:url('+ playerImg +');width:' + (width * 4) + 'px;height:' + (height * 4) + 'px"></div></div></div>';
 	}
 }
 
@@ -795,19 +750,14 @@ function move_map_player(bloc_id, move_id, user_id, loop)
 
 		if ( player[user_id].moves + 1 == move_id && !player[user_id].moving )
 		{
-			if ( bloc_id == 'teleport' )
-			{
+			if ( bloc_id == 'teleport' ) {
 				player[user_id].moving = true;
 				remove_player(user_id);
-			}
-			else if ( (parseInt(document.getElementById('p' + user_id).style.left) + player[user_id].left_gain) < parseInt(document.getElementById(bloc_id).style.left) && (parseInt(document.getElementById('p' + user_id).style.top) + player[user_id].top_gain) == parseInt(document.getElementById(bloc_id).style.top) )
-			{
+			} else if ( (parseInt(document.getElementById('p' + user_id).style.left) + player[user_id].left_gain) < parseInt(document.getElementById(bloc_id).style.left) && (parseInt(document.getElementById('p' + user_id).style.top) + player[user_id].top_gain) == parseInt(document.getElementById(bloc_id).style.top) ) {
 				player[user_id].moving = true;
 				player[user_id].moves++;
 				player_move_right(user_id, bloc_id, player[user_id].charaset, 'p');
-			}
-			else if ( (parseInt(document.getElementById('p' + user_id).style.left) + player[user_id].left_gain) > parseInt(document.getElementById(bloc_id).style.left) && (parseInt(document.getElementById('p' + user_id).style.top) + player[user_id].top_gain) == parseInt(document.getElementById(bloc_id).style.top) )
-			{
+			} else if ( (parseInt(document.getElementById('p' + user_id).style.left) + player[user_id].left_gain) > parseInt(document.getElementById(bloc_id).style.left) && (parseInt(document.getElementById('p' + user_id).style.top) + player[user_id].top_gain) == parseInt(document.getElementById(bloc_id).style.top) ) {
 				player[user_id].moving = true;
 				player[user_id].moves++;
 				player_move_left(user_id, bloc_id, player[user_id].charaset, 'p');
@@ -837,7 +787,7 @@ function bloc_click(bloc_id)
 {
 	if ( !player[my_user_id].moving && !stopped_map )
 	{
-		if ( path_finding = find_path(bloc_id, my_user_id) )
+        if ( path_finding = find_path(bloc_id, my_user_id) )
 		{
 			stop_walking = false;
 			path_finding.shift();
@@ -984,8 +934,7 @@ function player_move_right(user_id, bloc_id, charaset, prefix)
 	//var next_lower_bloc = 'l' + next_left_pos + '-' + next_top_pos;
 	//var next_upper_bloc = 'u' + next_left_pos + '-' + next_top_pos;
 	var next_event_bloc = 'i' + next_left_pos + '-' + next_top_pos;
-
-	if ( map_pass[next_top_pos][next_left_pos] )
+    if ( map_pass[next_top_pos][next_left_pos] )
 	{
 		if ( user_id == my_user_id )
 		{
@@ -1374,8 +1323,8 @@ function l_bloc(id, left, top, background_image, z_index)
 			map_images[background_image] = true;
 			all_loaded++;
 		}
-
-		background_image = 'background-image:url(images/tiles/' + background_image + ');';
+        var img = '\'images/tiles/' + background_image + '\'';
+		background_image = 'background-image:url(' + img + ');';
 		lower_buffer += '<div id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;' + background_image + 'z-index:' + z_index + ';width:' + tile_size + 'px;height:' + tile_size + 'px"></div>';
 	}
 }
@@ -1398,8 +1347,8 @@ function u_bloc(id, left, top, background_image, z_index)
 			map_images[background_image] = true;
 			all_loaded++;
 		}
-
-		background_image = 'background-image:url(images/tiles/' + background_image + ');';
+        var img = '\'images/tiles/' + background_image + '\'';
+		background_image = 'background-image:url(' + img + ');';
 		upper_buffer += '<div id="' + id + '" style="left:' + left + 'px;top:' + top + 'px;' + background_image + 'z-index:' + z_index + ';width:' + tile_size + 'px;height:' + tile_size + 'px"></div>';
 	}
 }
@@ -1441,6 +1390,7 @@ function make_pnt(x0, y0, x1, y1, pathcost, openlist, closelist, px, py)
 	this.x = x0;
 	this.y = y0;
 	this.pathcost = pathcost;
+	//需要的格子数
 	this.togocost = heuristic(x0, y0, x1, y1);
 	this.openlist = openlist;
 	this.closelist = closelist;
@@ -1462,10 +1412,10 @@ function find_path(bloc_id, user_id)
 	var newpt;
 	var curx;
 	var cury;
+	//tile个数
 	var width_tile = Math.floor(map_width / tile_size);
 	var height_tile = Math.floor(map_height / tile_size);
-
-	for ( i = 0; i <= height_tile; i++ )
+    for ( i = 0; i <= height_tile; i++ )
 	{
 		clonemap[i] = new Array();
 
@@ -1475,9 +1425,10 @@ function find_path(bloc_id, user_id)
 		}
 	}
 
+	//点击位置
 	var x1 = Math.floor(parseInt(document.getElementById(bloc_id).style.left) / tile_size);
 	var y1 = Math.floor(parseInt(document.getElementById(bloc_id).style.top) / tile_size);
-
+	//玩家位置
 	var x0 = Math.floor((parseInt(document.getElementById('p' + user_id).style.left) + player[user_id].left_gain) / tile_size);
 	var y0 = Math.floor((parseInt(document.getElementById('p' + user_id).style.top) + player[user_id].top_gain) / tile_size);
 
@@ -1490,8 +1441,7 @@ function find_path(bloc_id, user_id)
 
 	clonemap[y0][x0] = pnt;
 	openlist.push(pnt);
-
-	// On commence la recherche
+	// 开始搜索路径
 	while ( openlist.length > 0 )
 	{
 		min = 99999999999;
@@ -1513,7 +1463,8 @@ function find_path(bloc_id, user_id)
 		curpnt = openlist[nearestind];
 		curpnt.openlist = false;
 		curpnt.closelist = true;
-		// Si cette case est la case d'arriv�e, on arrete la boucle
+
+        // 玩家与点击位置重合时，停止循环
 		if ( curpnt.x == x1 && curpnt.y == y1 )
 		{
 			break;
@@ -1521,8 +1472,8 @@ function find_path(bloc_id, user_id)
 
 		closelist[closelist.length] = curpnt;
 		openlist.splice(nearestind, 1);
-		
-		// On teste les case alentours
+
+		//开始寻找可行路径
 		for ( i = -1; i <= 1; i++ )
 		{
 			for ( j = -1; j <= 1; j++ )
@@ -1530,10 +1481,9 @@ function find_path(bloc_id, user_id)
 				curx = curpnt.x + i;
 				cury = curpnt.y + j;
 
-				if ( ( i || j ) && curx != -1 && curx != width_tile && cury != -1 && cury != height_tile && !( i && j ) && ( !clonemap[cury][curx] || !clonemap[cury][curx].closelist ) && ( map_pass[cury][curx] || ( !map_pass[cury][curx] && curx == x1 && cury == y1 ) ) )
+                if ( ( i || j ) && curx != -1 && curx != width_tile && cury != -1 && cury != height_tile && !( i && j ) && ( !clonemap[cury][curx] || !clonemap[cury][curx].closelist ) && ( map_pass[cury][curx] || ( !map_pass[cury][curx] && curx == x1 && cury == y1 ) ) )
 				{
 					curpathcost = curpnt.pathcost + heuristic(curx, cury, x1, y1);
-
 					if ( clonemap[cury][curx] && clonemap[cury][curx].openlist )
 					{
 						if ( curpathcost < clonemap[cury][curx].pathcost )

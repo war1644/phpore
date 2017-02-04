@@ -46,7 +46,6 @@
  </tr>
 </table>
 <script type="text/javascript">
-<!--
 
 var my_user_id = {USER_ID};
 var my_user_name = '[USER_NAME]';
@@ -115,7 +114,6 @@ function map_start()
 		continue_event(event_status);
 	}
 }
-//-->
 </script>
 <script type="text/javascript" src="javascript/map.js"></script>
 

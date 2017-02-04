@@ -1,28 +1,16 @@
 <?php
+/**
+ * 网站管理面板
+ * @author 路漫漫
+ * @link ahmerry@qq.com
+ * @version V1.0
+ * @since
+ * <p>v0.9 2017/1/4 13:52  初版</p>
+ */
 
-/*
-
-Program: phpore
-Author: Jeremy Faivre
-Contact: http://www.jeremyfaivre.com/about
-Year: 2005
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-*/
-
-if ( !defined('IN_PHPORE') )
-{
-	exit;
-}
-
-if ( !$user->logged_in || !$user->admin )
-{
-	header('Location: ' . $config->path . $config->index . '?mod=login');
-	exit;
+if ( !$user->logged_in || !$user->admin ) {
+    header( 'Location: ' . $config->path . $config->index . '?mod=login' );
+    exit;
 }
 
 $mode = ( isset($_GET['mode']) ) ? 'GET.' . trim($_GET['mode']) : '';

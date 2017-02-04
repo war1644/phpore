@@ -441,8 +441,8 @@ div.playername
 	padding: 0;
 	margin: 0;
 	position: absolute;
-	left: 0px;
-	top: -5px;
+	left: -2px;
+	top: -14px;
 }
 
 div.playerspacer
@@ -703,6 +703,11 @@ div#global_tileset
 	/*height: 375px;*/
 	overflow: visible;
 	text-align: left;
+}
+div#global_tileset td div
+{
+	font-size: 10px;
+	color: black;
 }
 
 div#edit_event

@@ -19,27 +19,27 @@ if ( !defined('IN_PHPORE') )
 	exit;
 }
 
-// section critique : interdiction d'exécuter plusieurs fois ce script en meme temps
-$db->sql_query('UPDATE ' . CONFIG_TABLE . ' SET locked = 1 WHERE locked = 0');
+// section critique : interdiction d'exï¿½cuter plusieurs fois ce script en meme temps
+$rs = $db->sql_query('UPDATE ' . CONFIG_TABLE . ' SET locked = 1 WHERE locked = 0');
 
-if ( $db->sql_affectedrows() == 1 )
+if ( $db->sql_affectedrows($rs) == 1 )
 {
 	// nettoyage du chat
 	$db->sql_query('DELETE FROM ' . CHATBOX_TABLE . ' WHERE time < ' . (time() - $config->chat_history_time));
 
-	// le code écrit ici sera exécuté à chaque appel de ce fichier.
-	// si par exemple aucune page n'est affichée pendant 3 jours,
-	// puis que le 3e jour une page est affichée,
-	// le code qui est ici sera éxecuté 1 fois
+	// le code ï¿½crit ici sera exï¿½cutï¿½ ï¿½ chaque appel de ce fichier.
+	// si par exemple aucune page n'est affichï¿½e pendant 3 jours,
+	// puis que le 3e jour une page est affichï¿½e,
+	// le code qui est ici sera ï¿½xecutï¿½ 1 fois
 
 	while ( $config->day_number < $actual_day_number )
 	{
 		$config->day_number++;
 
-		// le code écrit ici sera exécuté une fois par jour.
-		// si par exemple aucune page n'est affichée pendant 3 jours,
-		// puis que le 3e jour une page est affichée,
-		// le code qui est ici sera éxecuté 3 fois
+		// le code ï¿½crit ici sera exï¿½cutï¿½ une fois par jour.
+		// si par exemple aucune page n'est affichï¿½e pendant 3 jours,
+		// puis que le 3e jour une page est affichï¿½e,
+		// le code qui est ici sera ï¿½xecutï¿½ 3 fois
 	}
 
 	$config->set('day_number', $config->day_number);
